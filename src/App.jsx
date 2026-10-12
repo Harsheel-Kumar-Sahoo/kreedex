@@ -1,31 +1,48 @@
+import { useState } from "react";
+import Register from "./screens/Register";
+import Children from "./screens/Children";
+
 export default function App() {
-  const steps = [
-    { title: "Register a child", note: "Chapter 2" },
-    { title: "Run a test", note: "Chapters 3-5" },
-    { title: "View results", note: "Chapters 6-7" },
-    { title: "Scout dashboard", note: "Chapter 8" },
-  ];
+  const [screen, setScreen] = useState("home");
+  const home = () => setScreen("home");
 
   return (
     <main className="app">
-      <header className="hero">
-        <div className="logo">K</div>
-        <h1>Kreedex</h1>
-        <p className="tagline">Find talent where it is, not where scouts are.</p>
-      </header>
+      {screen === "home" && (
+        <>
+          <header className="hero">
+            <div className="logo">K</div>
+            <h1>Kreedex</h1>
+            <p className="tagline">Find talent where it is, not where scouts are.</p>
+          </header>
 
-      <section className="cards">
-        {steps.map((s) => (
-          <button key={s.title} className="card" disabled>
-            <strong>{s.title}</strong>
-            <span>Coming in {s.note}</span>
-          </button>
-        ))}
-      </section>
+          <section className="cards">
+            <button className="card" onClick={() => setScreen("register")}>
+              <strong>Register a child</strong>
+              <span>Add a child with parental consent</span>
+            </button>
+            <button className="card" onClick={() => setScreen("children")}>
+              <strong>Registered children</strong>
+              <span>View and manage saved profiles</span>
+            </button>
+            <button className="card" disabled>
+              <strong>Run a test</strong>
+              <span>Coming in Chapters 3-5</span>
+            </button>
+            <button className="card" disabled>
+              <strong>Scout dashboard</strong>
+              <span>Coming in Chapter 8</span>
+            </button>
+          </section>
 
-      <footer className="foot">
-        Prototype · PS000014 · Seva First Innovation Challenge 2026
-      </footer>
+          <footer className="foot">
+            Prototype · PS000014 · Seva First Innovation Challenge 2026
+          </footer>
+        </>
+      )}
+
+      {screen === "register" && <Register onBack={home} />}
+      {screen === "children" && <Children onBack={home} />}
     </main>
   );
 }
