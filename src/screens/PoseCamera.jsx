@@ -5,9 +5,12 @@ import { loadPose } from "../pose";
 // Landmark indexes: 0 = nose, 27 = left ankle, 28 = right ankle
 const KEY_POINTS = [0, 27, 28];
 
-export default function PoseCamera({ facing }) {
+export default function PoseCamera({ facing, onFrame, overlay }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const onFrameRef = useRef(onFrame);
+  onFrameRef.current = onFrame;
+
   const [status, setStatus] = useState("Starting…");
   const [error, setError] = useState("");
   const [fullBody, setFullBody] = useState(false);
@@ -64,7 +67,8 @@ export default function PoseCamera({ facing }) {
 
           if (video.currentTime !== lastTime) {
             lastTime = video.currentTime;
-            const res = landmarker.detectForVideo(video, performance.now());
+            const now = performance.now();
+            const res = landmarker.detectForVideo(video, now);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const pose = res.landmarks[0];
@@ -82,8 +86,9 @@ export default function PoseCamera({ facing }) {
               setFullBody(full);
             }
 
+            if (onFrameRef.current) onFrameRef.current(pose, now);
+
             frames++;
-            const now = performance.now();
             if (now - t0 >= 1000) {
               setFps(Math.round((frames * 1000) / (now - t0)));
               frames = 0;
@@ -119,9 +124,12 @@ export default function PoseCamera({ facing }) {
 
   return (
     <div className="cam">
-      <div className={"stage" + (mirrored ? " mirror" : "")}>
-        <video ref={videoRef} playsInline muted />
-        <canvas ref={canvasRef} />
+      <div className="stagewrap">
+        <div className={"stage" + (mirrored ? " mirror" : "")}>
+          <video ref={videoRef} playsInline muted />
+          <canvas ref={canvasRef} />
+        </div>
+        {overlay}
       </div>
 
       {error ? (

@@ -8,7 +8,8 @@ export default function Children({ onBack }) {
   );
 
   async function remove(c) {
-    if (window.confirm(`Delete ${c.name} (${c.id})? This cannot be undone.`)) {
+    if (window.confirm(`Delete ${c.name} (${c.id}) and all their results? This cannot be undone.`)) {
+      await db.results.where("childId").equals(c.id).delete();
       await db.children.delete(c.id);
     }
   }
@@ -30,6 +31,7 @@ export default function Children({ onBack }) {
               <strong>{c.name}</strong>
               <span className="muted">
                 {c.id} · {c.age} yrs · {c.gender}
+                {c.heightCm ? ` · ${c.heightCm} cm` : ""}
               </span>
               <span className="muted">{c.school}, {c.district}</span>
             </div>

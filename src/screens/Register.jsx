@@ -13,6 +13,7 @@ const empty = {
   name: "",
   age: "",
   gender: "",
+  height: "",
   school: "",
   district: "",
   guardian: "",
@@ -32,9 +33,12 @@ export default function Register({ onBack }) {
     setError("");
 
     const age = Number(f.age);
+    const height = Number(f.height);
     if (!f.name.trim()) return setError("Please enter the child's name.");
     if (!age || age < 6 || age > 17) return setError("Age must be between 6 and 17.");
     if (!f.gender) return setError("Please select a gender.");
+    if (!height || height < 90 || height > 210)
+      return setError("Enter the child's height in cm (90 to 210).");
     if (!f.school.trim()) return setError("Please enter the school name.");
     if (!f.district.trim()) return setError("Please enter the district.");
     if (!f.guardian.trim()) return setError("Please enter the parent/guardian name.");
@@ -46,6 +50,7 @@ export default function Register({ onBack }) {
       name: f.name.trim(),
       age,
       gender: f.gender,
+      heightCm: height,
       school: f.school.trim(),
       district: f.district.trim(),
       guardian: f.guardian.trim(),
@@ -97,6 +102,17 @@ export default function Register({ onBack }) {
             </select>
           </label>
         </div>
+
+        <label>
+          Height (cm)
+          <input
+            type="number"
+            inputMode="numeric"
+            value={f.height}
+            onChange={set("height")}
+            placeholder="e.g. 142"
+          />
+        </label>
 
         <label>
           School
