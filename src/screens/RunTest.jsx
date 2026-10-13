@@ -144,7 +144,7 @@ export default function RunTest({ onBack }) {
         </button>
         <button className="card" disabled>
           <strong>Standing broad jump</strong>
-          <span>Coming next in Chapter 5</span>
+          <span>Planned for the next version</span>
         </button>
         <button className="card" onClick={() => setMode("camera")}>
           <strong>Camera check</strong>

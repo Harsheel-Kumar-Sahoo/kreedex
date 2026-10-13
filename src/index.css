@@ -202,3 +202,23 @@ h1 { margin: 0; font-size: 32px; color: var(--navy); }
   font-size: 14px;
   line-height: 1.4;
 }
+
+.childcard {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.childcard .child { border: none; border-radius: 0; }
+
+.scorebox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+.scorerow { display: flex; align-items: center; gap: 14px; }
+.scorenum { font-size: 44px; font-weight: 800; line-height: 1; }
+.scoretext { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.chipsub { font-weight: 400; color: var(--muted); font-size: 13px; }
