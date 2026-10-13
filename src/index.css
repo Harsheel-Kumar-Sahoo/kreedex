@@ -116,3 +116,31 @@ h1 { margin: 0; font-size: 32px; color: var(--navy); }
   border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;
 }
 .child div { display: flex; flex-direction: column; gap: 2px; }
+
+.cam { display: flex; flex-direction: column; gap: 10px; }
+
+.stage {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.stage video, .stage canvas { display: block; width: 100%; }
+.stage canvas { position: absolute; inset: 0; height: 100%; }
+.mirror { transform: scaleX(-1); }
+
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--navy);
+}
+.pill.ok { background: #dcfce7; color: #166534; }
+.pill.warn { background: #ffedd5; color: #9a3412; }
+
+.pick { width: 100%; text-align: left; font: inherit; background: #fff; cursor: pointer; color: var(--ink); }
+.pick:active { background: #f1f5f9; }

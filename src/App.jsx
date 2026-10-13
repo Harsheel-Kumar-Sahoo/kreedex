@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Register from "./screens/Register";
 import Children from "./screens/Children";
+import RunTest from "./screens/RunTest";
 
 export default function App() {
   const [screen, setScreen] = useState("home");
@@ -25,9 +26,9 @@ export default function App() {
               <strong>Registered children</strong>
               <span>View and manage saved profiles</span>
             </button>
-            <button className="card" disabled>
+            <button className="card" onClick={() => setScreen("test")}>
               <strong>Run a test</strong>
-              <span>Coming in Chapters 3-5</span>
+              <span>Camera and pose detection</span>
             </button>
             <button className="card" disabled>
               <strong>Scout dashboard</strong>
@@ -43,6 +44,7 @@ export default function App() {
 
       {screen === "register" && <Register onBack={home} />}
       {screen === "children" && <Children onBack={home} />}
+      {screen === "test" && <RunTest onBack={home} />}
     </main>
   );
 }
