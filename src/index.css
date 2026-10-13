@@ -191,3 +191,14 @@ h1 { margin: 0; font-size: 32px; color: var(--navy); }
 .chip.best { border-color: var(--orange); color: var(--orange); }
 
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+
+.note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 14px;
+  line-height: 1.4;
+}

@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import JumpTest from "./JumpTest";
+import BalanceTest from "./BalanceTest";
 
 function HeightForm({ child, onSaved, onBack }) {
   const [h, setH] = useState("");
@@ -21,7 +22,7 @@ function HeightForm({ child, onSaved, onBack }) {
       <button className="link" onClick={onBack}>← Change child</button>
       <h2>Height needed</h2>
       <p className="muted">
-        {child.name} has no height saved. It is used to convert the jump into centimetres.
+        {child.name} has no height saved. It is used to convert measurements into centimetres.
       </p>
       <form className="form" onSubmit={save}>
         <label>
@@ -79,7 +80,7 @@ export default function RunTest({ onBack }) {
     []
   );
   const [child, setChild] = useState(null);
-  const [mode, setMode] = useState(null); // null | "jump" | "camera"
+  const [mode, setMode] = useState(null); // null | "jump" | "balance" | "camera"
 
   if (!child) {
     return (
@@ -119,6 +120,9 @@ export default function RunTest({ onBack }) {
   if (mode === "jump") {
     return <JumpTest child={child} onBack={() => setMode(null)} />;
   }
+  if (mode === "balance") {
+    return <BalanceTest child={child} onBack={() => setMode(null)} />;
+  }
   if (mode === "camera") {
     return <CameraCheck child={child} onBack={() => setMode(null)} />;
   }
@@ -134,13 +138,17 @@ export default function RunTest({ onBack }) {
           <strong>Vertical jump</strong>
           <span>Measures jump height in cm</span>
         </button>
+        <button className="card" onClick={() => setMode("balance")}>
+          <strong>Single-leg balance</strong>
+          <span>Times how long one foot stays lifted</span>
+        </button>
+        <button className="card" disabled>
+          <strong>Standing broad jump</strong>
+          <span>Coming next in Chapter 5</span>
+        </button>
         <button className="card" onClick={() => setMode("camera")}>
           <strong>Camera check</strong>
           <span>Check that the pose detection works</span>
-        </button>
-        <button className="card" disabled>
-          <strong>Broad jump and balance</strong>
-          <span>Coming in Chapter 5</span>
         </button>
       </div>
     </section>

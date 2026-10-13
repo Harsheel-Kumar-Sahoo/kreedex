@@ -86,8 +86,10 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
               setFullBody(full);
             }
 
-            if (onFrameRef.current) onFrameRef.current(pose, now);
-
+            if (onFrameRef.current) {
+              onFrameRef.current(pose, now, canvas.width / canvas.height);
+            }
+            
             frames++;
             if (now - t0 >= 1000) {
               setFps(Math.round((frames * 1000) / (now - t0)));
