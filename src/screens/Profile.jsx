@@ -74,7 +74,7 @@ export default function Profile({ childId, onBack, onRunTest }) {
       <button className="link noprint" onClick={onBack}>← Back</button>
 
       <div>
-        <h2>{child.name}</h2>
+        <h2>{child.name}{child.demo && <span className="tag">SAMPLE</span>}</h2>
         <p className="muted">
           {child.id} · {child.age} yrs · {child.gender}
           {child.heightCm ? ` · ${child.heightCm} cm` : ""}

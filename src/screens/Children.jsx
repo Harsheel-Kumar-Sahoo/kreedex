@@ -42,7 +42,7 @@ export default function Children({ onBack, onOpen }) {
             <div className="childcard" key={c.id}>
               <div className="child">
                 <div>
-                  <strong>{c.name}</strong>
+                  <strong>{c.name}{c.demo && <span className="tag">SAMPLE</span>}</strong>
                   <span className="muted">
                     {c.id} · {c.age} yrs · {c.gender}
                     {c.heightCm ? ` · ${c.heightCm} cm` : ""}

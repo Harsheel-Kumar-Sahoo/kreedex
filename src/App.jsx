@@ -3,14 +3,22 @@ import Register from "./screens/Register";
 import Children from "./screens/Children";
 import RunTest from "./screens/RunTest";
 import Profile from "./screens/Profile";
+import Dashboard from "./screens/Dashboard";
 
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [profileId, setProfileId] = useState(null);
+  const [profileFrom, setProfileFrom] = useState("children");
   const home = () => setScreen("home");
 
+  const openProfile = (from) => (id) => {
+    setProfileId(id);
+    setProfileFrom(from);
+    setScreen("profile");
+  };
+
   return (
-    <main className="app">
+    <main className={"app" + (screen === "dashboard" ? " wide" : "")}>
       {screen === "home" && (
         <>
           <header className="hero">
@@ -32,9 +40,9 @@ export default function App() {
               <strong>Run a test</strong>
               <span>Vertical jump and single-leg balance</span>
             </button>
-            <button className="card" disabled>
+            <button className="card" onClick={() => setScreen("dashboard")}>
               <strong>Scout dashboard</strong>
-              <span>Coming in Chapter 8</span>
+              <span>Coverage, filters and shortlist</span>
             </button>
           </section>
 
@@ -45,19 +53,12 @@ export default function App() {
       )}
 
       {screen === "register" && <Register onBack={home} />}
-      {screen === "children" && (
-        <Children
-          onBack={home}
-          onOpen={(id) => {
-            setProfileId(id);
-            setScreen("profile");
-          }}
-        />
-      )}
+      {screen === "children" && <Children onBack={home} onOpen={openProfile("children")} />}
+      {screen === "dashboard" && <Dashboard onBack={home} onOpen={openProfile("dashboard")} />}
       {screen === "profile" && (
         <Profile
           childId={profileId}
-          onBack={() => setScreen("children")}
+          onBack={() => setScreen(profileFrom)}
           onRunTest={() => setScreen("test")}
         />
       )}

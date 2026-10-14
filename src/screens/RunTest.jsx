@@ -94,7 +94,7 @@ export default function RunTest({ onBack }) {
         )}
 
         <div className="list">
-          {children?.map((c) => (
+          {children?.filter((c) => !c.demo).map((c) => (
             <button className="child pick" key={c.id} onClick={() => setChild(c)}>
               <div>
                 <strong>{c.name}</strong>
