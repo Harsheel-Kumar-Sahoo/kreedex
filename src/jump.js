@@ -36,6 +36,7 @@ export function readFrame(pose) {
 }
 
 // Uses ~2 seconds of standing-still frames to set the baseline and the scale.
+// "reason" values are translation keys (see strings.js).
 export function calibrate(samples, heightCm) {
   const hip = samples.map((s) => s.hip);
   const heel = samples.map((s) => s.heel);
@@ -43,16 +44,16 @@ export function calibrate(samples, heightCm) {
   const bodyNorm = median(samples.map((s) => s.heel - s.nose));
 
   if (std(hip) > 0.01 || std(heel) > 0.01) {
-    return { ok: false, reason: "You moved. Stand still and try again." };
+    return { ok: false, reason: "r.moved" };
   }
   if (bodyNorm < 0.35) {
-    return { ok: false, reason: "Too far away. Move the phone closer." };
+    return { ok: false, reason: "r.far" };
   }
   if (bodyNorm > 0.72) {
-    return { ok: false, reason: "Too close. Move the phone back." };
+    return { ok: false, reason: "r.close" };
   }
   if (baseNose < 0.12) {
-    return { ok: false, reason: "Leave space above the head for the jump. Move the phone back." };
+    return { ok: false, reason: "r.headroom" };
   }
 
   return {
@@ -67,13 +68,10 @@ export function calibrate(samples, heightCm) {
 // Turns the recorded jump frames into a height in cm, or a reason it was rejected.
 export function analyze({ samples, total }, cal) {
   if (samples.length < 15) {
-    return { ok: false, reason: "Too few frames were captured. Try again." };
+    return { ok: false, reason: "r.few" };
   }
   if (samples.length / total < 0.7) {
-    return {
-      ok: false,
-      reason: "The body was partly out of view. Keep the whole body visible, including the feet.",
-    };
+    return { ok: false, reason: "r.partial" };
   }
 
   const hip = smooth(samples.map((s) => s.hip));
@@ -84,20 +82,17 @@ export function analyze({ samples, total }, cal) {
   const tEnd = samples[samples.length - 1].t;
   const tail = samples.filter((s) => s.t > tEnd - 500).map((s) => s.hip);
   if (tail.length < 5) {
-    return { ok: false, reason: "Not enough frames after landing. Try again." };
+    return { ok: false, reason: "r.tail" };
   }
   if (Math.abs(median(tail) - cal.baseHip) > 0.07 * cal.bodyNorm) {
-    return {
-      ok: false,
-      reason: "The phone or the child moved during the attempt. Keep the phone steady and stand still after landing.",
-    };
+    return { ok: false, reason: "r.shift" };
   }
 
   if (cm < 5) {
-    return { ok: false, reason: "No jump detected. Jump as high as you can with both feet." };
+    return { ok: false, reason: "r.nojump" };
   }
   if (cm > 90) {
-    return { ok: false, reason: "That reading is not realistic. Check the height entered and try again." };
+    return { ok: false, reason: "r.unreal" };
   }
 
   return { ok: true, cm: Math.round(cm * 10) / 10 };

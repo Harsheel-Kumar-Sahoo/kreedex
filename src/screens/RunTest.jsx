@@ -4,29 +4,29 @@ import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import JumpTest from "./JumpTest";
 import BalanceTest from "./BalanceTest";
+import { useT } from "../lang";
 
 function HeightForm({ child, onSaved, onBack }) {
+  const { t } = useT();
   const [h, setH] = useState("");
-  const [err, setErr] = useState("");
+  const [err, setErr] = useState(false);
 
   async function save(e) {
     e.preventDefault();
     const v = Number(h);
-    if (!v || v < 90 || v > 210) return setErr("Enter the height in cm (90 to 210).");
+    if (!v || v < 90 || v > 210) return setErr(true);
     await db.children.update(child.id, { heightCm: v });
     onSaved({ ...child, heightCm: v });
   }
 
   return (
     <section className="panel">
-      <button className="link" onClick={onBack}>← Change child</button>
-      <h2>Height needed</h2>
-      <p className="muted">
-        {child.name} has no height saved. It is used to convert measurements into centimetres.
-      </p>
+      <button className="link" onClick={onBack}>{t("rt.changeChild")}</button>
+      <h2>{t("rt.heightTitle")}</h2>
+      <p className="muted">{t("rt.heightBody", { name: child.name })}</p>
       <form className="form" onSubmit={save}>
         <label>
-          Height (cm)
+          {t("reg.height")}
           <input
             type="number"
             inputMode="numeric"
@@ -34,28 +34,26 @@ function HeightForm({ child, onSaved, onBack }) {
             onChange={(e) => setH(e.target.value)}
           />
         </label>
-        {err && <p className="error">{err}</p>}
-        <button className="btn primary" type="submit">Save height</button>
+        {err && <p className="error">{t("rt.heightErr")}</p>}
+        <button className="btn primary" type="submit">{t("rt.heightSave")}</button>
       </form>
     </section>
   );
 }
 
 function CameraCheck({ child, onBack }) {
+  const { t } = useT();
   const [on, setOn] = useState(false);
   const [facing, setFacing] = useState("environment");
 
   return (
     <section className="panel">
-      <button className="link" onClick={onBack}>← Back</button>
-      <h2>Camera check</h2>
-      <p className="muted">
-        {child.name} ({child.id}). Stand 2-3 metres from the phone so the whole body is
-        visible. Video stays on this device and is not saved.
-      </p>
+      <button className="link" onClick={onBack}>{t("back")}</button>
+      <h2>{t("rt.cam")}</h2>
+      <p className="muted">{t("cam.body", { name: child.name, id: child.id })}</p>
 
       {!on ? (
-        <button className="btn primary" onClick={() => setOn(true)}>Start camera</button>
+        <button className="btn primary" onClick={() => setOn(true)}>{t("cam.start")}</button>
       ) : (
         <>
           <PoseCamera facing={facing} />
@@ -64,9 +62,9 @@ function CameraCheck({ child, onBack }) {
               className="btn"
               onClick={() => setFacing(facing === "environment" ? "user" : "environment")}
             >
-              Switch camera
+              {t("cam.switch")}
             </button>
-            <button className="btn" onClick={() => setOn(false)}>Stop</button>
+            <button className="btn" onClick={() => setOn(false)}>{t("cam.stop")}</button>
           </div>
         </>
       )}
@@ -75,6 +73,7 @@ function CameraCheck({ child, onBack }) {
 }
 
 export default function RunTest({ onBack }) {
+  const { t } = useT();
   const children = useLiveQuery(
     () => db.children.orderBy("createdAt").reverse().toArray(),
     []
@@ -85,12 +84,12 @@ export default function RunTest({ onBack }) {
   if (!child) {
     return (
       <section className="panel">
-        <button className="link" onClick={onBack}>← Back</button>
-        <h2>Run a test</h2>
-        <p className="muted">Select the child who will take the test.</p>
+        <button className="link" onClick={onBack}>{t("back")}</button>
+        <h2>{t("home.test")}</h2>
+        <p className="muted">{t("rt.pick")}</p>
 
         {children && children.length === 0 && (
-          <p className="muted">No children registered yet. Register one first.</p>
+          <p className="muted">{t("rt.noChildren")}</p>
         )}
 
         <div className="list">
@@ -98,7 +97,7 @@ export default function RunTest({ onBack }) {
             <button className="child pick" key={c.id} onClick={() => setChild(c)}>
               <div>
                 <strong>{c.name}</strong>
-                <span className="muted">{c.id} · {c.age} yrs · {c.gender}</span>
+                <span className="muted">{c.id} · {c.age} · {t("gender." + c.gender)}</span>
               </div>
             </button>
           ))}
@@ -129,26 +128,26 @@ export default function RunTest({ onBack }) {
 
   return (
     <section className="panel">
-      <button className="link" onClick={() => setChild(null)}>← Change child</button>
-      <h2>Choose a test</h2>
+      <button className="link" onClick={() => setChild(null)}>{t("rt.changeChild")}</button>
+      <h2>{t("rt.choose")}</h2>
       <p className="muted">{child.name} · {child.id} · {child.heightCm} cm</p>
 
       <div className="cards">
         <button className="card" onClick={() => setMode("jump")}>
-          <strong>Vertical jump</strong>
-          <span>Measures jump height in cm</span>
+          <strong>{t("test.vertical_jump")}</strong>
+          <span>{t("rt.jumpSub")}</span>
         </button>
         <button className="card" onClick={() => setMode("balance")}>
-          <strong>Single-leg balance</strong>
-          <span>Times how long one foot stays lifted</span>
+          <strong>{t("test.single_leg_balance")}</strong>
+          <span>{t("rt.balanceSub")}</span>
         </button>
         <button className="card" disabled>
-          <strong>Standing broad jump</strong>
-          <span>Planned for the next version</span>
+          <strong>{t("rt.broad")}</strong>
+          <span>{t("rt.broadSub")}</span>
         </button>
         <button className="card" onClick={() => setMode("camera")}>
-          <strong>Camera check</strong>
-          <span>Check that the pose detection works</span>
+          <strong>{t("rt.cam")}</strong>
+          <span>{t("rt.camSub")}</span>
         </button>
       </div>
     </section>

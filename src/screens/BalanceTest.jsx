@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import { readFrame, calibrate, detectLift, holdStatus, summarize } from "../balance";
+import { useT } from "../lang";
 
 const CAL_MS = 1500;          // standing-still time for calibration
 const WAIT_MS = 10000;        // time allowed to lift a foot after the cue
@@ -12,16 +13,17 @@ const LOST_MS = 1000;         // body out of view for this long cancels the atte
 const MAX_ATTEMPTS = 3;
 
 const ENDED = {
-  down: "Raised foot touched down",
-  moved: "Standing foot moved",
-  max: "Reached the 60 second limit",
+  down: "bal.end.down",
+  moved: "bal.end.moved",
+  max: "bal.end.max",
 };
 
 export default function BalanceTest({ child, onBack }) {
+  const { t } = useT();
   const [on, setOn] = useState(false);
   const [facing, setFacing] = useState("environment");
   const [phase, setPhase] = useState("idle"); // idle | calibrate | lift | hold
-  const [hint, setHint] = useState("");
+  const [hint, setHint] = useState("bal.cue.both"); // a string key
   const [elapsed, setElapsed] = useState(0);
   const [last, setLast] = useState(null);
   const [attempts, setAttempts] = useState([]);
@@ -42,7 +44,7 @@ export default function BalanceTest({ child, onBack }) {
     calRef.current = { samples: [], start: 0, pauseUntil: 0 };
     setLast(null);
     setElapsed(0);
-    setHint("Stand on both feet…");
+    setHint("bal.cue.both");
     go("calibrate");
   }
 
@@ -82,11 +84,11 @@ export default function BalanceTest({ child, onBack }) {
       if (!f) {
         c.samples = [];
         c.start = 0;
-        setHint("Step back until your whole body is visible");
+        setHint("cue.step");
         return;
       }
 
-      setHint("Stand on both feet…");
+      setHint("bal.cue.both");
       if (!c.start) c.start = now;
       c.samples.push(f);
 
@@ -110,7 +112,7 @@ export default function BalanceTest({ child, onBack }) {
     if (p === "lift") {
       const w = waitRef.current;
       if (now - w.start > WAIT_MS) {
-        fail("No foot lift was detected. Lift one foot clearly off the ground and try again.");
+        fail("bal.r.nolift");
         return;
       }
       if (!f) {
@@ -150,7 +152,7 @@ export default function BalanceTest({ child, onBack }) {
 
       if (!f) {
         if (now - h.lastSeen > LOST_MS) {
-          fail("The body went out of view during the hold. Keep the whole body visible.");
+          fail("bal.r.lost");
         }
         return;
       }
@@ -211,17 +213,17 @@ export default function BalanceTest({ child, onBack }) {
   const overlay =
     phase === "calibrate" ? (
       <div className="ov">
-        <div className="ov-big">{hint}</div>
+        <div className="ov-big">{t(hint)}</div>
       </div>
     ) : phase === "lift" ? (
       <div className="ov">
-        <div className="ov-big go">LIFT ONE FOOT</div>
-        <div className="ov-sm">and hold it up</div>
+        <div className="ov-big go">{t("bal.cue.lift")}</div>
+        <div className="ov-sm">{t("bal.cue.liftSub")}</div>
       </div>
     ) : phase === "hold" ? (
       <div className="ov">
         <div className="ov-big go">{elapsed.toFixed(1)} s</div>
-        <div className="ov-sm">keep holding</div>
+        <div className="ov-sm">{t("bal.cue.hold")}</div>
       </div>
     ) : null;
 
@@ -234,28 +236,25 @@ export default function BalanceTest({ child, onBack }) {
           onBack();
         }}
       >
-        ← Back
+        {t("back")}
       </button>
-      <h2>Single-leg balance</h2>
+      <h2>{t("test.single_leg_balance")}</h2>
       <p className="muted">
         {child.name} · {child.id} · {child.heightCm} cm
       </p>
 
-      <p className="note">
-        Safety: an adult should stand nearby, the floor should be flat and not slippery,
-        and the area around the child should be clear. The child can stop at any time.
-      </p>
+      <p className="note">{t("bal.safety")}</p>
 
       <ol className="steps">
-        <li>Rest the phone steady at about waist height, 2-3 metres away, facing the child.</li>
-        <li>The whole body must be visible, including both feet.</li>
-        <li>Tap Start attempt and stand on both feet for about 2 seconds.</li>
-        <li>When the screen says LIFT ONE FOOT, lift either foot and hold as long as possible.</li>
-        <li>The test stops when the raised foot touches down, the standing foot moves, or after 60 seconds.</li>
+        <li>{t("bal.s1")}</li>
+        <li>{t("bal.s2")}</li>
+        <li>{t("bal.s3")}</li>
+        <li>{t("bal.s4")}</li>
+        <li>{t("bal.s5")}</li>
       </ol>
 
       {!on ? (
-        <button className="btn primary" onClick={() => setOn(true)}>Start camera</button>
+        <button className="btn primary" onClick={() => setOn(true)}>{t("cam.start")}</button>
       ) : (
         <>
           <PoseCamera facing={facing} onFrame={onFrame} overlay={overlay} />
@@ -266,8 +265,8 @@ export default function BalanceTest({ child, onBack }) {
             onClick={startAttempt}
           >
             {attempts.length >= MAX_ATTEMPTS
-              ? "3 attempts done"
-              : `Start attempt ${attempts.length + 1} of ${MAX_ATTEMPTS}`}
+              ? t("attempt.done", { max: MAX_ATTEMPTS })
+              : t("attempt.start", { n: attempts.length + 1, max: MAX_ATTEMPTS })}
           </button>
 
           <div className="row">
@@ -276,9 +275,9 @@ export default function BalanceTest({ child, onBack }) {
               disabled={phase !== "idle"}
               onClick={() => setFacing(facing === "environment" ? "user" : "environment")}
             >
-              Switch camera
+              {t("cam.switch")}
             </button>
-            <button className="btn" onClick={stop}>Stop camera</button>
+            <button className="btn" onClick={stop}>{t("cam.stop")}</button>
           </div>
         </>
       )}
@@ -287,15 +286,15 @@ export default function BalanceTest({ child, onBack }) {
         (last.ok ? (
           <div className="result good">
             <div className="num">{last.sec} s</div>
-            <div>Attempt {attempts.length} recorded · {last.ended}</div>
+            <div>{t("res.recorded", { n: attempts.length })} · {t(last.ended)}</div>
             {last.swayCm != null && (
-              <div>Sway: {last.swayCm} cm ({last.rating})</div>
+              <div>{t("bal.sway", { v: last.swayCm, r: t("rating." + last.rating) })}</div>
             )}
           </div>
         ) : (
           <div className="result bad">
-            <strong>Attempt not counted</strong>
-            <div>{last.reason}</div>
+            <strong>{t("res.notCounted")}</strong>
+            <div>{t(last.reason)}</div>
           </div>
         ))}
 
@@ -309,15 +308,17 @@ export default function BalanceTest({ child, onBack }) {
             ))}
           </div>
           <p className="muted">
-            Best: {best.sec} s
-            {best.swayCm != null ? ` · sway ${best.swayCm} cm (${best.rating})` : ""}
+            {t("res.best", { v: best.sec + " s" })}
+            {best.swayCm != null
+              ? " · " + t("bal.swayShort", { v: best.swayCm, r: t("rating." + best.rating) })
+              : ""}
           </p>
 
           <div className="row">
             <button className="btn primary" disabled={saved} onClick={saveBest}>
-              {saved ? "Saved" : "Save best result"}
+              {saved ? t("res.saved") : t("res.save")}
             </button>
-            <button className="btn" onClick={resetAttempts}>Clear attempts</button>
+            <button className="btn" onClick={resetAttempts}>{t("res.clear")}</button>
           </div>
         </>
       )}

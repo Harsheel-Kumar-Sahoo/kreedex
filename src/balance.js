@@ -7,6 +7,7 @@ const NEEDED = [0, 11, 12, 23, 24, 27, 28];
 const NOSE_TO_ANKLE = 0.87;
 
 // Sway ratings are placeholder cut-offs for the prototype, not published norms.
+// The English words are stored with the result and translated when shown.
 const rate = (cm) => (cm < 2 ? "Steady" : cm < 4 ? "Some sway" : "Unsteady");
 
 const round1 = (x) => Math.round(x * 10) / 10;
@@ -40,22 +41,23 @@ export function readFrame(pose, aspect) {
 }
 
 // Uses ~1.5 seconds of standing on both feet to set the starting position and scale.
+// "reason" values are translation keys (see strings.js).
 export function calibrate(samples, heightCm) {
   const ankleAvg = samples.map((s) => (s.ankleLY + s.ankleRY) / 2);
   const bodyNorm = median(samples.map((s, i) => ankleAvg[i] - s.noseY));
   const diff = median(samples.map((s) => Math.abs(s.ankleLY - s.ankleRY)));
 
   if (std(samples.map((s) => s.hipX)) > 0.015 || std(ankleAvg) > 0.01) {
-    return { ok: false, reason: "You moved. Stand still on both feet and try again." };
+    return { ok: false, reason: "bal.r.moved" };
   }
   if (bodyNorm < 0.35) {
-    return { ok: false, reason: "Too far away. Move the phone closer." };
+    return { ok: false, reason: "r.far" };
   }
   if (bodyNorm > 0.85) {
-    return { ok: false, reason: "Too close. Move the phone back." };
+    return { ok: false, reason: "r.close" };
   }
   if (diff > 0.04 * bodyNorm) {
-    return { ok: false, reason: "Start with both feet flat on the ground." };
+    return { ok: false, reason: "bal.r.bothfeet" };
   }
 
   return {
@@ -98,10 +100,7 @@ export function holdStatus(f, cal, raised) {
 export function summarize({ startT, endT, hipXs }, cal) {
   const sec = (endT - startT) / 1000;
   if (sec < 1) {
-    return {
-      ok: false,
-      reason: "The foot was lifted for less than 1 second. Lift it and hold it up.",
-    };
+    return { ok: false, reason: "bal.r.short" };
   }
   const xs = hipXs.filter((p) => p.t >= startT && p.t <= endT).map((p) => p.x);
   const swayCm = xs.length >= 5 ? round1(std(xs) * cal.cmPerUnit) : null;

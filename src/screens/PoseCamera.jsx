@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { DrawingUtils, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { loadPose } from "../pose";
+import { useT } from "../lang";
 
 // Landmark indexes: 0 = nose, 27 = left ankle, 28 = right ankle
 const KEY_POINTS = [0, 27, 28];
 
 export default function PoseCamera({ facing, onFrame, overlay }) {
+  const { t } = useT();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const onFrameRef = useRef(onFrame);
   onFrameRef.current = onFrame;
 
-  const [status, setStatus] = useState("Starting…");
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState("cam.s.start"); // a string key
+  const [error, setError] = useState(null); // { key, detail }
   const [fullBody, setFullBody] = useState(false);
   const [fps, setFps] = useState(0);
 
@@ -25,14 +27,14 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
     async function start() {
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error("Camera is not available. Open the app over HTTPS.");
+          throw new Error("https");
         }
 
-        setStatus("Loading pose model…");
+        setStatus("cam.s.model");
         const landmarker = await loadPose();
         if (cancelled) return;
 
-        setStatus("Starting camera…");
+        setStatus("cam.s.camera");
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: facing },
@@ -42,7 +44,7 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
           audio: false,
         });
         if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
+          stream.getTracks().forEach((tr) => tr.stop());
           return;
         }
 
@@ -55,7 +57,7 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
         const ctx = canvas.getContext("2d");
         const drawer = new DrawingUtils(ctx);
 
-        setStatus("Ready");
+        setStatus("cam.s.ready");
 
         let lastTime = -1;
         let lastFull = false;
@@ -89,7 +91,7 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
             if (onFrameRef.current) {
               onFrameRef.current(pose, now, canvas.width / canvas.height);
             }
-            
+
             frames++;
             if (now - t0 >= 1000) {
               setFps(Math.round((frames * 1000) / (now - t0)));
@@ -103,11 +105,13 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
       } catch (e) {
         if (cancelled) return;
         if (e.name === "NotAllowedError") {
-          setError("Camera permission was denied. Allow camera access and try again.");
+          setError({ key: "cam.e.denied" });
         } else if (e.name === "NotFoundError") {
-          setError("No camera found on this device.");
+          setError({ key: "cam.e.none" });
+        } else if (e.message === "https") {
+          setError({ key: "cam.e.https" });
         } else {
-          setError(e.message || "Something went wrong starting the camera.");
+          setError({ key: "cam.e.other", detail: e.message });
         }
       }
     }
@@ -117,7 +121,7 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
-      if (stream) stream.getTracks().forEach((t) => t.stop());
+      if (stream) stream.getTracks().forEach((tr) => tr.stop());
       if (video) video.srcObject = null;
     };
   }, [facing]);
@@ -135,16 +139,19 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
       </div>
 
       {error ? (
-        <p className="error">{error}</p>
+        <p className="error">
+          {t(error.key)}
+          {error.detail ? ` (${error.detail})` : ""}
+        </p>
       ) : (
         <div className="pills">
-          <span className="pill">{status}</span>
-          {status === "Ready" && (
+          <span className="pill">{t(status)}</span>
+          {status === "cam.s.ready" && (
             <>
               <span className={"pill " + (fullBody ? "ok" : "warn")}>
-                {fullBody ? "Full body in frame" : "Step back until head and feet show"}
+                {fullBody ? t("cam.full") : t("cam.step")}
               </span>
-              <span className="pill">{fps} fps</span>
+              <span className="pill">{t("cam.fps", { n: fps })}</span>
             </>
           )}
         </div>

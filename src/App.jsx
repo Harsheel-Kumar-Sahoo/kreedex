@@ -4,8 +4,11 @@ import Children from "./screens/Children";
 import RunTest from "./screens/RunTest";
 import Profile from "./screens/Profile";
 import Dashboard from "./screens/Dashboard";
+import LangSwitch from "./LangSwitch";
+import { useT } from "./lang";
 
 export default function App() {
+  const { t } = useT();
   const [screen, setScreen] = useState("home");
   const [profileId, setProfileId] = useState(null);
   const [profileFrom, setProfileFrom] = useState("children");
@@ -19,36 +22,36 @@ export default function App() {
 
   return (
     <main className={"app" + (screen === "dashboard" ? " wide" : "")}>
+      <LangSwitch />
+
       {screen === "home" && (
         <>
           <header className="hero">
             <div className="logo">K</div>
             <h1>Kreedex</h1>
-            <p className="tagline">Find talent where it is, not where scouts are.</p>
+            <p className="tagline">{t("home.tagline")}</p>
           </header>
 
           <section className="cards">
             <button className="card" onClick={() => setScreen("register")}>
-              <strong>Register a child</strong>
-              <span>Add a child with parental consent</span>
+              <strong>{t("home.register")}</strong>
+              <span>{t("home.registerSub")}</span>
             </button>
             <button className="card" onClick={() => setScreen("children")}>
-              <strong>Registered children</strong>
-              <span>View profiles, scores and history</span>
+              <strong>{t("home.children")}</strong>
+              <span>{t("home.childrenSub")}</span>
             </button>
             <button className="card" onClick={() => setScreen("test")}>
-              <strong>Run a test</strong>
-              <span>Vertical jump and single-leg balance</span>
+              <strong>{t("home.test")}</strong>
+              <span>{t("home.testSub")}</span>
             </button>
             <button className="card" onClick={() => setScreen("dashboard")}>
-              <strong>Scout dashboard</strong>
-              <span>Coverage, filters and shortlist</span>
+              <strong>{t("home.dashboard")}</strong>
+              <span>{t("home.dashboardSub")}</span>
             </button>
           </section>
 
-          <footer className="foot">
-            Prototype · PS000014 · Seva First Innovation Challenge 2026
-          </footer>
+          <footer className="foot">{t("home.footer")}</footer>
         </>
       )}
 

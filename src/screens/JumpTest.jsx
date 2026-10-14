@@ -2,16 +2,18 @@ import { useRef, useState } from "react";
 import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import { readFrame, calibrate, analyze } from "../jump";
+import { useT } from "../lang";
 
 const CAL_MS = 2000;   // stand-still time for calibration
 const MAX_MS = 6000;   // longest time allowed for the jump
 const MAX_ATTEMPTS = 3;
 
 export default function JumpTest({ child, onBack }) {
+  const { t } = useT();
   const [on, setOn] = useState(false);
   const [facing, setFacing] = useState("environment");
   const [phase, setPhase] = useState("idle"); // idle | calibrate | jump
-  const [hint, setHint] = useState("");
+  const [hint, setHint] = useState("cue.still"); // a string key
   const [last, setLast] = useState(null);
   const [attempts, setAttempts] = useState([]);
   const [saved, setSaved] = useState(false);
@@ -29,7 +31,7 @@ export default function JumpTest({ child, onBack }) {
   function startAttempt() {
     calRef.current = { samples: [], start: 0, pauseUntil: 0 };
     setLast(null);
-    setHint("Stand still…");
+    setHint("cue.still");
     go("calibrate");
   }
 
@@ -54,11 +56,11 @@ export default function JumpTest({ child, onBack }) {
       if (!f) {
         c.samples = [];
         c.start = 0;
-        setHint("Step back until your whole body is visible");
+        setHint("cue.step");
         return;
       }
 
-      setHint("Stand still…");
+      setHint("cue.still");
       if (!c.start) c.start = now;
       c.samples.push(f);
 
@@ -130,12 +132,12 @@ export default function JumpTest({ child, onBack }) {
   const overlay =
     phase === "calibrate" ? (
       <div className="ov">
-        <div className="ov-big">{hint}</div>
+        <div className="ov-big">{t(hint)}</div>
       </div>
     ) : phase === "jump" ? (
       <div className="ov">
-        <div className="ov-big go">JUMP!</div>
-        <div className="ov-sm">then stand still</div>
+        <div className="ov-big go">{t("cue.jump")}</div>
+        <div className="ov-sm">{t("cue.then")}</div>
       </div>
     ) : null;
 
@@ -148,22 +150,22 @@ export default function JumpTest({ child, onBack }) {
           onBack();
         }}
       >
-        ← Back
+        {t("back")}
       </button>
-      <h2>Vertical jump</h2>
+      <h2>{t("test.vertical_jump")}</h2>
       <p className="muted">
         {child.name} · {child.id} · {child.heightCm} cm
       </p>
 
       <ol className="steps">
-        <li>Rest the phone steady at about hip height, 2-3 metres away, facing the child.</li>
-        <li>The whole body must be visible, with space above the head.</li>
-        <li>Tap Start attempt and stand still for 2 seconds.</li>
-        <li>When the screen says JUMP, jump as high as you can with both feet, then stand still.</li>
+        <li>{t("jump.s1")}</li>
+        <li>{t("jump.s2")}</li>
+        <li>{t("jump.s3")}</li>
+        <li>{t("jump.s4")}</li>
       </ol>
 
       {!on ? (
-        <button className="btn primary" onClick={() => setOn(true)}>Start camera</button>
+        <button className="btn primary" onClick={() => setOn(true)}>{t("cam.start")}</button>
       ) : (
         <>
           <PoseCamera facing={facing} onFrame={onFrame} overlay={overlay} />
@@ -174,8 +176,8 @@ export default function JumpTest({ child, onBack }) {
             onClick={startAttempt}
           >
             {attempts.length >= MAX_ATTEMPTS
-              ? "3 attempts done"
-              : `Start attempt ${attempts.length + 1} of ${MAX_ATTEMPTS}`}
+              ? t("attempt.done", { max: MAX_ATTEMPTS })
+              : t("attempt.start", { n: attempts.length + 1, max: MAX_ATTEMPTS })}
           </button>
 
           <div className="row">
@@ -184,9 +186,9 @@ export default function JumpTest({ child, onBack }) {
               disabled={phase !== "idle"}
               onClick={() => setFacing(facing === "environment" ? "user" : "environment")}
             >
-              Switch camera
+              {t("cam.switch")}
             </button>
-            <button className="btn" onClick={stop}>Stop camera</button>
+            <button className="btn" onClick={stop}>{t("cam.stop")}</button>
           </div>
         </>
       )}
@@ -195,12 +197,12 @@ export default function JumpTest({ child, onBack }) {
         (last.ok ? (
           <div className="result good">
             <div className="num">{last.cm} cm</div>
-            <div>Attempt {attempts.length} recorded</div>
+            <div>{t("res.recorded", { n: attempts.length })}</div>
           </div>
         ) : (
           <div className="result bad">
-            <strong>Attempt not counted</strong>
-            <div>{last.reason}</div>
+            <strong>{t("res.notCounted")}</strong>
+            <div>{t(last.reason)}</div>
           </div>
         ))}
 
@@ -213,13 +215,13 @@ export default function JumpTest({ child, onBack }) {
               </span>
             ))}
           </div>
-          <p className="muted">Best: {best} cm</p>
+          <p className="muted">{t("res.best", { v: best + " cm" })}</p>
 
           <div className="row">
             <button className="btn primary" disabled={saved} onClick={saveBest}>
-              {saved ? "Saved" : "Save best result"}
+              {saved ? t("res.saved") : t("res.save")}
             </button>
-            <button className="btn" onClick={resetAttempts}>Clear attempts</button>
+            <button className="btn" onClick={resetAttempts}>{t("res.clear")}</button>
           </div>
         </>
       )}

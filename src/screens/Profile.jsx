@@ -1,15 +1,10 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db";
-import { BENCHMARKS, SHOW_PLACEHOLDER_NOTICE, PLACEHOLDER_NOTICE } from "../benchmarks";
+import { BENCHMARKS, SHOW_PLACEHOLDER_NOTICE } from "../benchmarks";
 import { computeKreedex, testHistory, band } from "../scoring";
+import { useT } from "../lang";
 
-const fmtDate = (t) =>
-  new Date(t).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-
+const LOCALES = { en: "en-IN", gu: "gu-IN", hi: "hi-IN" };
 const round1 = (x) => Math.round(x * 10) / 10;
 
 // A small line chart of results over time, drawn as plain SVG.
@@ -41,17 +36,25 @@ function Spark({ values }) {
 }
 
 export default function Profile({ childId, onBack, onRunTest }) {
+  const { t, lang } = useT();
   const child = useLiveQuery(() => db.children.get(childId), [childId]);
   const results = useLiveQuery(
     () => db.results.where("childId").equals(childId).toArray(),
     [childId]
   );
 
+  const fmtDate = (ts) =>
+    new Date(ts).toLocaleDateString(LOCALES[lang] || "en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
   if (!child || !results) {
     return (
       <section className="panel">
-        <button className="link" onClick={onBack}>← Back</button>
-        <p className="muted">Loading…</p>
+        <button className="link" onClick={onBack}>{t("back")}</button>
+        <p className="muted">{t("loading")}</p>
       </section>
     );
   }
@@ -64,36 +67,39 @@ export default function Profile({ childId, onBack, onRunTest }) {
   }));
 
   async function removeResult(id) {
-    if (window.confirm("Delete this result? This cannot be undone.")) {
+    if (window.confirm(t("pf.deleteConfirm"))) {
       await db.results.delete(id);
     }
   }
 
   return (
     <section className="panel">
-      <button className="link noprint" onClick={onBack}>← Back</button>
+      <button className="link noprint" onClick={onBack}>{t("back")}</button>
 
       <div>
-        <h2>{child.name}{child.demo && <span className="tag">SAMPLE</span>}</h2>
+        <h2>
+          {child.name}
+          {child.demo && <span className="tag">{t("tag.sample")}</span>}
+        </h2>
         <p className="muted">
-          {child.id} · {child.age} yrs · {child.gender}
+          {child.id} · {child.age} · {t("gender." + child.gender)}
           {child.heightCm ? ` · ${child.heightCm} cm` : ""}
         </p>
         <p className="muted">{child.school}, {child.district}</p>
       </div>
 
-      {SHOW_PLACEHOLDER_NOTICE && <p className="note">{PLACEHOLDER_NOTICE}</p>}
+      {SHOW_PLACEHOLDER_NOTICE && <p className="note">{t("notice.placeholder")}</p>}
 
       <div className="scorebox">
         {k.overall == null ? (
-          <span className="muted">No test results saved yet.</span>
+          <span className="muted">{t("ch.noResults")}</span>
         ) : (
           <div className="scorerow">
             <span className="scorenum" style={{ color: k.band.color }}>{k.overall}</span>
             <span className="scoretext">
-              <strong>Kreedex Score</strong>
-              <span style={{ color: k.band.color }}>{k.band.label}</span>
-              <span className="muted">Based on {k.count} of {k.total} tests</span>
+              <strong>{t("ch.score")}</strong>
+              <span style={{ color: k.band.color }}>{t("band." + k.band.label)}</span>
+              <span className="muted">{t("ch.basedOn", { n: k.count, total: k.total })}</span>
             </span>
           </div>
         )}
@@ -108,24 +114,24 @@ export default function Profile({ childId, onBack, onRunTest }) {
         return (
           <div className="testcard" key={id}>
             <div className="testhead">
-              <strong>{bm.label}</strong>
-              <span className="muted">{bm.index}</span>
+              <strong>{t("test." + id)}</strong>
+              <span className="muted">{t("index." + bm.index)}</span>
             </div>
 
             {!latest ? (
-              <p className="muted">Not tested yet.</p>
+              <p className="muted">{t("pf.notTested")}</p>
             ) : (
               <>
                 <div className="testnums">
                   <span className="testval">{latest.value} {bm.unit}</span>
                   <span style={{ color: b.color, fontWeight: 600 }}>
-                    {latest.score} · {b.label}
+                    {latest.score} · {t("band." + b.label)}
                   </span>
                 </div>
 
                 {delta != null && (
                   <p className="muted">
-                    Change since the previous result: {delta > 0 ? "+" : ""}{delta} {bm.unit}
+                    {t("pf.change", { v: (delta > 0 ? "+" : "") + delta, unit: bm.unit })}
                   </p>
                 )}
 
@@ -135,9 +141,9 @@ export default function Profile({ childId, onBack, onRunTest }) {
                   {[...hist].reverse().map((h) => (
                     <div className="histrow" key={h.id}>
                       <span>{fmtDate(h.createdAt)}</span>
-                      <span>{h.value} {bm.unit} · score {h.score}</span>
+                      <span>{h.value} {bm.unit} · {t("pf.score")} {h.score}</span>
                       <button className="link danger noprint" onClick={() => removeResult(h.id)}>
-                        Delete
+                        {t("ch.delete")}
                       </button>
                     </div>
                   ))}
@@ -148,14 +154,11 @@ export default function Profile({ childId, onBack, onRunTest }) {
         );
       })}
 
-      <p className="muted">
-        The Kreedex Score is a screening indicator based on comparison with children of the
-        same age and gender. It is not a diagnosis or a prediction of future talent.
-      </p>
+      <p className="muted">{t("pf.disclaimer")}</p>
 
       <div className="row noprint">
-        <button className="btn primary" onClick={onRunTest}>Run a test</button>
-        <button className="btn" onClick={() => window.print()}>Print / Save as PDF</button>
+        <button className="btn primary" onClick={onRunTest}>{t("home.test")}</button>
+        <button className="btn" onClick={() => window.print()}>{t("pf.print")}</button>
       </div>
     </section>
   );

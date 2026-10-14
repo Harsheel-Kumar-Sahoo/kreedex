@@ -323,3 +323,20 @@ h1 { margin: 0; font-size: 32px; color: var(--navy); }
 @media (max-width: 520px) {
   .covrow { grid-template-columns: 90px 1fr 100px; font-size: 13px; }
 }
+
+
+
+.langs { display: flex; justify-content: center; gap: 6px; }
+.langbtn {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: var(--navy);
+  cursor: pointer;
+}
+.langbtn.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+html:lang(gu) body, html:lang(hi) body { line-height: 1.6; }

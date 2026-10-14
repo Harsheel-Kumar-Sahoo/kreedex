@@ -1,9 +1,11 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db";
 import { computeKreedex } from "../scoring";
-import { SHOW_PLACEHOLDER_NOTICE, PLACEHOLDER_NOTICE } from "../benchmarks";
+import { SHOW_PLACEHOLDER_NOTICE } from "../benchmarks";
+import { useT } from "../lang";
 
 export default function Children({ onBack, onOpen }) {
+  const { t } = useT();
   const children = useLiveQuery(
     () => db.children.orderBy("createdAt").reverse().toArray(),
     []
@@ -17,7 +19,7 @@ export default function Children({ onBack, onOpen }) {
   }
 
   async function remove(c) {
-    if (window.confirm(`Delete ${c.name} (${c.id}) and all their results? This cannot be undone.`)) {
+    if (window.confirm(t("ch.confirm", { name: c.name, id: c.id }))) {
       await db.results.where("childId").equals(c.id).delete();
       await db.children.delete(c.id);
     }
@@ -25,14 +27,14 @@ export default function Children({ onBack, onOpen }) {
 
   return (
     <section className="panel">
-      <button className="link" onClick={onBack}>← Back</button>
-      <h2>Registered children</h2>
+      <button className="link" onClick={onBack}>{t("back")}</button>
+      <h2>{t("home.children")}</h2>
 
-      {SHOW_PLACEHOLDER_NOTICE && <p className="note">{PLACEHOLDER_NOTICE}</p>}
+      {SHOW_PLACEHOLDER_NOTICE && <p className="note">{t("notice.placeholder")}</p>}
 
-      {!children && <p className="muted">Loading…</p>}
+      {!children && <p className="muted">{t("loading")}</p>}
       {children && children.length === 0 && (
-        <p className="muted">No children registered yet.</p>
+        <p className="muted">{t("ch.empty")}</p>
       )}
 
       <div className="list">
@@ -42,19 +44,22 @@ export default function Children({ onBack, onOpen }) {
             <div className="childcard" key={c.id}>
               <div className="child">
                 <div>
-                  <strong>{c.name}{c.demo && <span className="tag">SAMPLE</span>}</strong>
+                  <strong>
+                    {c.name}
+                    {c.demo && <span className="tag">{t("tag.sample")}</span>}
+                  </strong>
                   <span className="muted">
-                    {c.id} · {c.age} yrs · {c.gender}
+                    {c.id} · {c.age} · {t("gender." + c.gender)}
                     {c.heightCm ? ` · ${c.heightCm} cm` : ""}
                   </span>
                   <span className="muted">{c.school}, {c.district}</span>
                 </div>
-                <button className="link danger" onClick={() => remove(c)}>Delete</button>
+                <button className="link danger" onClick={() => remove(c)}>{t("ch.delete")}</button>
               </div>
 
               <div className="scorebox">
                 {k.overall == null ? (
-                  <span className="muted">No test results saved yet.</span>
+                  <span className="muted">{t("ch.noResults")}</span>
                 ) : (
                   <>
                     <div className="scorerow">
@@ -62,24 +67,24 @@ export default function Children({ onBack, onOpen }) {
                         {k.overall}
                       </span>
                       <span className="scoretext">
-                        <strong>Kreedex Score</strong>
-                        <span style={{ color: k.band.color }}>{k.band.label}</span>
+                        <strong>{t("ch.score")}</strong>
+                        <span style={{ color: k.band.color }}>{t("band." + k.band.label)}</span>
                         <span className="muted">
-                          Based on {k.count} of {k.total} tests
+                          {t("ch.basedOn", { n: k.count, total: k.total })}
                         </span>
                       </span>
                     </div>
                     <div className="attempts">
-                      {k.tests.map((t) => (
-                        <span className="chip" key={t.id}>
-                          {t.index}: {t.score}
-                          <span className="chipsub"> ({t.value} {t.unit})</span>
+                      {k.tests.map((x) => (
+                        <span className="chip" key={x.id}>
+                          {t("index." + x.index)}: {x.score}
+                          <span className="chipsub"> ({x.value} {x.unit})</span>
                         </span>
                       ))}
                     </div>
                   </>
                 )}
-                <button className="btn" onClick={() => onOpen(c.id)}>View profile</button>
+                <button className="btn" onClick={() => onOpen(c.id)}>{t("ch.view")}</button>
               </div>
             </div>
           );
