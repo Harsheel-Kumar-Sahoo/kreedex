@@ -222,3 +222,38 @@ h1 { margin: 0; font-size: 32px; color: var(--navy); }
 .scorenum { font-size: 44px; font-weight: 800; line-height: 1; }
 .scoretext { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .chipsub { font-weight: 400; color: var(--muted); font-size: 13px; }
+
+
+.testcard {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.testhead { display: flex; justify-content: space-between; align-items: baseline; }
+.testnums { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.testval { font-size: 28px; font-weight: 800; color: var(--navy); }
+.testcard p { margin: 0; }
+
+.spark { width: 100%; max-width: 300px; height: auto; }
+
+.hist { display: flex; flex-direction: column; border-top: 1px solid #e2e8f0; }
+.histrow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+
+@media print {
+  .noprint { display: none !important; }
+  body { background: #fff; }
+  .app { max-width: none; padding: 0; min-height: 0; }
+  .panel { border: none; padding: 0; }
+  .testcard, .scorebox { break-inside: avoid; }
+}

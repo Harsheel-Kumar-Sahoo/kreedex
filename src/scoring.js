@@ -83,3 +83,17 @@ export function computeKreedex(child, results) {
   const overall = Math.round(tests.reduce((s, t) => s + t.score, 0) / tests.length);
   return { overall, tests, count: tests.length, total, band: band(overall) };
 }
+
+// All saved results for one test, oldest first, each with its score.
+export function testHistory(child, results, testId) {
+  const bm = BENCHMARKS[testId];
+  return results
+    .filter((r) => r.test === testId && r[bm.field] != null)
+    .sort((x, y) => x.createdAt - y.createdAt)
+    .map((r) => ({
+      id: r.id,
+      createdAt: r.createdAt,
+      value: r[bm.field],
+      score: scoreTest(testId, r[bm.field], child),
+    }));
+}

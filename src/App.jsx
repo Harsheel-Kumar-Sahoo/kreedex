@@ -2,9 +2,11 @@ import { useState } from "react";
 import Register from "./screens/Register";
 import Children from "./screens/Children";
 import RunTest from "./screens/RunTest";
+import Profile from "./screens/Profile";
 
 export default function App() {
   const [screen, setScreen] = useState("home");
+  const [profileId, setProfileId] = useState(null);
   const home = () => setScreen("home");
 
   return (
@@ -24,11 +26,11 @@ export default function App() {
             </button>
             <button className="card" onClick={() => setScreen("children")}>
               <strong>Registered children</strong>
-              <span>View and manage saved profiles</span>
+              <span>View profiles, scores and history</span>
             </button>
             <button className="card" onClick={() => setScreen("test")}>
               <strong>Run a test</strong>
-              <span>Camera and pose detection</span>
+              <span>Vertical jump and single-leg balance</span>
             </button>
             <button className="card" disabled>
               <strong>Scout dashboard</strong>
@@ -43,7 +45,22 @@ export default function App() {
       )}
 
       {screen === "register" && <Register onBack={home} />}
-      {screen === "children" && <Children onBack={home} />}
+      {screen === "children" && (
+        <Children
+          onBack={home}
+          onOpen={(id) => {
+            setProfileId(id);
+            setScreen("profile");
+          }}
+        />
+      )}
+      {screen === "profile" && (
+        <Profile
+          childId={profileId}
+          onBack={() => setScreen("children")}
+          onRunTest={() => setScreen("test")}
+        />
+      )}
       {screen === "test" && <RunTest onBack={home} />}
     </main>
   );

@@ -3,7 +3,7 @@ import { db } from "../db";
 import { computeKreedex } from "../scoring";
 import { SHOW_PLACEHOLDER_NOTICE, PLACEHOLDER_NOTICE } from "../benchmarks";
 
-export default function Children({ onBack }) {
+export default function Children({ onBack, onOpen }) {
   const children = useLiveQuery(
     () => db.children.orderBy("createdAt").reverse().toArray(),
     []
@@ -73,14 +73,13 @@ export default function Children({ onBack }) {
                       {k.tests.map((t) => (
                         <span className="chip" key={t.id}>
                           {t.index}: {t.score}
-                          <span className="chipsub">
-                            {" "}({t.value} {t.unit})
-                          </span>
+                          <span className="chipsub"> ({t.value} {t.unit})</span>
                         </span>
                       ))}
                     </div>
                   </>
                 )}
+                <button className="btn" onClick={() => onOpen(c.id)}>View profile</button>
               </div>
             </div>
           );
