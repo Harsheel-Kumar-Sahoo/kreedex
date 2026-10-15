@@ -2,6 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db";
 import { BENCHMARKS, SHOW_PLACEHOLDER_NOTICE } from "../benchmarks";
 import { computeKreedex, testHistory, band } from "../scoring";
+import { KHELO, KHELO_ORDER, LEVEL_COLORS, levelFor, fmt } from "../khelo";
 import { useT } from "../lang";
 
 const LOCALES = { en: "en-IN", gu: "gu-IN", hi: "hi-IN" };
@@ -66,6 +67,26 @@ export default function Profile({ childId, onBack, onRunTest }) {
     hist: testHistory(child, results, id),
   }));
 
+  // Official Khelo India tests, newest result first, each with its level.
+  const official = KHELO_ORDER.map((id) => ({
+    id,
+    hist: results
+      .filter((r) => r.test === id)
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map((r) => ({
+        r,
+        lv: levelFor(id, r.tableGender, r.age ?? child.age, r.value),
+      })),
+  }));
+  const scoredOfficial = official.filter((o) => o.hist.length && o.hist[0].lv);
+  const avgPts = scoredOfficial.length
+    ? round1(scoredOfficial.reduce((s, o) => s + o.hist[0].lv.points, 0) / scoredOfficial.length)
+    : null;
+  const showOfficial = child.age >= 9 || official.some((o) => o.hist.length);
+
+  const showVal = (id, v) =>
+    fmt(id, v) + (id === "run_600" ? "" : " " + t("kh.unit." + KHELO[id].unit));
+
   async function removeResult(id) {
     if (window.confirm(t("pf.deleteConfirm"))) {
       await db.results.delete(id);
@@ -104,6 +125,8 @@ export default function Profile({ childId, onBack, onRunTest }) {
           </div>
         )}
       </div>
+
+      <h3>{t("kh.camTitle")}</h3>
 
       {tests.map(({ id, bm, hist }) => {
         const latest = hist[hist.length - 1];
@@ -153,6 +176,62 @@ export default function Profile({ childId, onBack, onRunTest }) {
           </div>
         );
       })}
+
+      {showOfficial && (
+        <>
+          <h3>{t("kh.profileTitle")}</h3>
+          <p className="note">{t("kh.source")}</p>
+          {avgPts != null && (
+            <p><strong>{t("kh.avg", { p: avgPts, n: scoredOfficial.length })}</strong></p>
+          )}
+
+          {official.map(({ id, hist }) => {
+            const top = hist[0];
+            const lv = top ? top.lv : null;
+            const color = lv ? LEVEL_COLORS[lv.n - 1] : null;
+
+            return (
+              <div className="testcard" key={id}>
+                <div className="testhead">
+                  <strong>{t("kh." + id)}</strong>
+                </div>
+
+                {!top ? (
+                  <p className="muted">{t("pf.notTested")}</p>
+                ) : (
+                  <>
+                    <div className="testnums">
+                      <span className="testval">{showVal(id, top.r.value)}</span>
+                      {lv && (
+                        <span style={{ color, fontWeight: 600 }}>
+                          {t("kh.level", { n: lv.n })} · {t("lvl." + lv.n)} ·{" "}
+                          {t("kh.points", { p: lv.points })}
+                        </span>
+                      )}
+                    </div>
+                    {lv && lv.below && <p className="muted">{t("kh.below")}</p>}
+
+                    <div className="hist">
+                      {hist.map(({ r, lv: l }) => (
+                        <div className="histrow" key={r.id}>
+                          <span>{fmtDate(r.createdAt)}</span>
+                          <span>
+                            {showVal(id, r.value)}
+                            {l ? " · " + t("kh.level", { n: l.n }) : ""}
+                          </span>
+                          <button className="link danger noprint" onClick={() => removeResult(r.id)}>
+                            {t("ch.delete")}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
 
       <p className="muted">{t("pf.disclaimer")}</p>
 

@@ -433,3 +433,6 @@ html.a11y-contrast .pill { border: 1px solid #0f172a; }
 html.a11y-contrast button:focus-visible,
 html.a11y-contrast input:focus-visible,
 html.a11y-contrast select:focus-visible { outline-color: #000; }
+
+
+.lvlbig { font-size: 44px; font-weight: 800; line-height: 1; }

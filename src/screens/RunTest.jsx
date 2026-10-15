@@ -4,6 +4,7 @@ import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import JumpTest from "./JumpTest";
 import BalanceTest from "./BalanceTest";
+import ManualTests from "./ManualTests";
 import { useT } from "../lang";
 
 function HeightForm({ child, onSaved, onBack }) {
@@ -79,7 +80,7 @@ export default function RunTest({ onBack }) {
     []
   );
   const [child, setChild] = useState(null);
-  const [mode, setMode] = useState(null); // null | "jump" | "balance" | "camera"
+  const [mode, setMode] = useState(null); // null | "jump" | "balance" | "khelo" | "camera"
 
   if (!child) {
     return (
@@ -104,6 +105,10 @@ export default function RunTest({ onBack }) {
         </div>
       </section>
     );
+  }
+
+  if (mode === "khelo") {
+    return <ManualTests child={child} onBack={() => setMode(null)} />;
   }
 
   if (!child.heightCm) {
@@ -140,6 +145,10 @@ export default function RunTest({ onBack }) {
         <button className="card" onClick={() => setMode("balance")}>
           <strong>{t("test.single_leg_balance")}</strong>
           <span>{t("rt.balanceSub")}</span>
+        </button>
+        <button className="card" onClick={() => setMode("khelo")}>
+          <strong>{t("rt.khelo")}</strong>
+          <span>{t("rt.kheloSub")}</span>
         </button>
         <button className="card" disabled>
           <strong>{t("rt.broad")}</strong>
