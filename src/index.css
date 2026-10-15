@@ -357,3 +357,20 @@ html:lang(gu) body, html:lang(hi) body { line-height: 1.6; }
 
 .bar { height: 8px; border-radius: 6px; background: #e2e8f0; overflow: hidden; }
 .bar span { display: block; height: 100%; background: var(--orange); transition: width 0.2s; }
+
+
+.welcome {
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.welcome ol { margin: 0; padding-left: 20px; line-height: 1.5; font-size: 14px; }
+.welcome p { margin: 0; }
+
+.pvblock p { margin: 4px 0 0; line-height: 1.5; font-size: 14px; }
+.btn.danger { color: #b91c1c; border-color: #fecaca; }
+.footlink { font-size: 13px; color: var(--muted); text-decoration: underline; margin-bottom: 6px; }

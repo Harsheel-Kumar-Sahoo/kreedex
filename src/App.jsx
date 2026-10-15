@@ -4,8 +4,10 @@ import Children from "./screens/Children";
 import RunTest from "./screens/RunTest";
 import Profile from "./screens/Profile";
 import Dashboard from "./screens/Dashboard";
+import Privacy from "./screens/Privacy";
 import LangSwitch from "./LangSwitch";
 import OfflineBox from "./OfflineBox";
+import Welcome from "./Welcome";
 import { useT } from "./lang";
 
 export default function App() {
@@ -33,6 +35,8 @@ export default function App() {
             <p className="tagline">{t("home.tagline")}</p>
           </header>
 
+          <Welcome />
+
           <section className="cards">
             <button className="card" onClick={() => setScreen("register")}>
               <strong>{t("home.register")}</strong>
@@ -54,13 +58,19 @@ export default function App() {
 
           <OfflineBox />
 
-          <footer className="foot">{t("home.footer")}</footer>
+          <footer className="foot">
+            <button className="link footlink" onClick={() => setScreen("privacy")}>
+              {t("home.privacy")}
+            </button>
+            <div>{t("home.footer")}</div>
+          </footer>
         </>
       )}
 
       {screen === "register" && <Register onBack={home} />}
       {screen === "children" && <Children onBack={home} onOpen={openProfile("children")} />}
       {screen === "dashboard" && <Dashboard onBack={home} onOpen={openProfile("dashboard")} />}
+      {screen === "privacy" && <Privacy onBack={home} />}
       {screen === "profile" && (
         <Profile
           childId={profileId}
