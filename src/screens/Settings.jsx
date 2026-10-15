@@ -19,6 +19,7 @@ export default function Settings({ onBack }) {
   const { t, lang } = useT();
   const { settings, setSetting, say, cue } = useSettings();
   const [found, setFound] = useState(null);
+  const [voiceList, setVoiceList] = useState([]);
 
   useEffect(() => {
     let alive = true;
@@ -26,7 +27,13 @@ export default function Settings({ onBack }) {
       loadVoices().then((voices) => {
         if (!alive) return;
         const v = pickVoice(lang, voices);
-        setFound({ lang, status: v ? (v.localService ? "local" : "online") : "none" });
+        setFound({
+          lang,
+          status: v ? (v.localService ? "local" : "online") : "none",
+          name: v ? v.name + " (" + v.lang + ")" : "",
+        });
+        const langs = voices.map((x) => x.lang + (x.localService ? "" : " (online)"));
+        setVoiceList(Array.from(new Set(langs)).sort());
       });
     }
     return () => {
@@ -82,6 +89,16 @@ export default function Settings({ onBack }) {
       />
 
       <p className="muted">{t("set.note")}</p>
+
+      <details>
+        <summary>Technical info</summary>
+        <p className="muted">
+          Voice used for this language: {found && found.lang === lang && found.name ? found.name : "none"}
+        </p>
+        <p className="muted">
+          Voice languages on this phone: {voiceList.length ? voiceList.join(", ") : "none reported"}
+        </p>
+      </details>
     </section>
   );
 }
