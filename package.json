@@ -3,8 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
+    "scripts": {
+    "predev": "node scripts/make-offline-list.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/make-offline-list.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

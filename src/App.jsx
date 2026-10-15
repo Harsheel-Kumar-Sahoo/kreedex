@@ -5,6 +5,7 @@ import RunTest from "./screens/RunTest";
 import Profile from "./screens/Profile";
 import Dashboard from "./screens/Dashboard";
 import LangSwitch from "./LangSwitch";
+import OfflineBox from "./OfflineBox";
 import { useT } from "./lang";
 
 export default function App() {
@@ -50,6 +51,8 @@ export default function App() {
               <span>{t("home.dashboardSub")}</span>
             </button>
           </section>
+
+          <OfflineBox />
 
           <footer className="foot">{t("home.footer")}</footer>
         </>

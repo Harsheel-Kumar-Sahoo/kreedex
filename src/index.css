@@ -340,3 +340,20 @@ h1 { margin: 0; font-size: 32px; color: var(--navy); }
 .langbtn.on { background: var(--navy); border-color: var(--navy); color: #fff; }
 
 html:lang(gu) body, html:lang(hi) body { line-height: 1.6; }
+
+
+.offbox {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.offbox.ready { background: #f0fdf4; border-color: #bbf7d0; }
+.offbox p { margin: 0; }
+.offhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+.bar { height: 8px; border-radius: 6px; background: #e2e8f0; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--orange); transition: width 0.2s; }
