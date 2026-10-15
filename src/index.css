@@ -374,3 +374,62 @@ html:lang(gu) body, html:lang(hi) body { line-height: 1.6; }
 .pvblock p { margin: 4px 0 0; line-height: 1.5; font-size: 14px; }
 .btn.danger { color: #b91c1c; border-color: #fecaca; }
 .footlink { font-size: 13px; color: var(--muted); text-decoration: underline; margin-bottom: 6px; }
+
+
+/* Keyboard and screen-reader users can see where they are */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.toggle {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+.toggle input { width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0; }
+.toggle > span { display: flex; flex-direction: column; gap: 2px; }
+
+/* Larger text and buttons */
+html.a11y-large .app { zoom: 1.25; }
+
+/* High contrast */
+html.a11y-contrast {
+  --navy: #00172e;
+  --orange: #9a3412;
+  --muted: #1e293b;
+  --ink: #000;
+  --bg: #fff;
+}
+html.a11y-contrast body { background: #fff; color: #000; }
+html.a11y-contrast .muted,
+html.a11y-contrast .chipsub,
+html.a11y-contrast .foot { color: #1e293b; }
+html.a11y-contrast .panel,
+html.a11y-contrast .card,
+html.a11y-contrast .childcard,
+html.a11y-contrast .testcard,
+html.a11y-contrast .rowcard,
+html.a11y-contrast .stat,
+html.a11y-contrast .offbox,
+html.a11y-contrast .welcome,
+html.a11y-contrast .toggle,
+html.a11y-contrast .chip { border: 2px solid #0f172a; }
+html.a11y-contrast .btn { border: 2px solid #0f172a; }
+html.a11y-contrast .btn.primary { border-color: #9a3412; }
+html.a11y-contrast .note { background: #fff; border: 2px solid #1e3a8a; color: #0f172a; }
+html.a11y-contrast .form input,
+html.a11y-contrast .form select,
+html.a11y-contrast .statusel { border: 2px solid #0f172a; }
+html.a11y-contrast .pill { border: 1px solid #0f172a; }
+html.a11y-contrast button:focus-visible,
+html.a11y-contrast input:focus-visible,
+html.a11y-contrast select:focus-visible { outline-color: #000; }

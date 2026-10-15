@@ -5,6 +5,7 @@ import RunTest from "./screens/RunTest";
 import Profile from "./screens/Profile";
 import Dashboard from "./screens/Dashboard";
 import Privacy from "./screens/Privacy";
+import Settings from "./screens/Settings";
 import LangSwitch from "./LangSwitch";
 import OfflineBox from "./OfflineBox";
 import Welcome from "./Welcome";
@@ -54,6 +55,10 @@ export default function App() {
               <strong>{t("home.dashboard")}</strong>
               <span>{t("home.dashboardSub")}</span>
             </button>
+            <button className="card" onClick={() => setScreen("settings")}>
+              <strong>{t("home.settings")}</strong>
+              <span>{t("home.settingsSub")}</span>
+            </button>
           </section>
 
           <OfflineBox />
@@ -71,6 +76,7 @@ export default function App() {
       {screen === "children" && <Children onBack={home} onOpen={openProfile("children")} />}
       {screen === "dashboard" && <Dashboard onBack={home} onOpen={openProfile("dashboard")} />}
       {screen === "privacy" && <Privacy onBack={home} />}
+      {screen === "settings" && <Settings onBack={home} />}
       {screen === "profile" && (
         <Profile
           childId={profileId}

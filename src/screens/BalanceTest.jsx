@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import { readFrame, calibrate, detectLift, holdStatus, summarize } from "../balance";
 import { useT } from "../lang";
+import { useSettings } from "../settings";
 
 const CAL_MS = 1500;          // standing-still time for calibration
 const WAIT_MS = 10000;        // time allowed to lift a foot after the cue
@@ -20,6 +21,7 @@ const ENDED = {
 
 export default function BalanceTest({ child, onBack }) {
   const { t } = useT();
+  const { say, cue, silence, prime } = useSettings();
   const [on, setOn] = useState(false);
   const [facing, setFacing] = useState("environment");
   const [phase, setPhase] = useState("idle"); // idle | calibrate | lift | hold
@@ -34,13 +36,26 @@ export default function BalanceTest({ child, onBack }) {
   const baseRef = useRef(null);
   const waitRef = useRef({ start: 0, side: null, since: 0 });
   const holdRef = useRef(null);
+  const spokenRef = useRef("");
+
+  // Stop any speech when leaving this screen.
+  useEffect(() => () => silence(), [silence]);
 
   function go(p) {
     phaseRef.current = p;
     setPhase(p);
   }
 
+  // Speaks a cue once, not on every camera frame.
+  function speakHint(key) {
+    if (spokenRef.current === key) return;
+    spokenRef.current = key;
+    say(t(key));
+  }
+
   function startAttempt() {
+    prime();
+    spokenRef.current = "";
     calRef.current = { samples: [], start: 0, pauseUntil: 0 };
     setLast(null);
     setElapsed(0);
@@ -50,6 +65,8 @@ export default function BalanceTest({ child, onBack }) {
 
   function fail(reason) {
     setLast({ ok: false, reason });
+    cue("bad");
+    say(t("sp.rejected", { reason: t(reason) }));
     go("idle");
   }
 
@@ -66,6 +83,11 @@ export default function BalanceTest({ child, onBack }) {
         { sec: result.sec, swayCm: result.swayCm, rating: result.rating },
       ]);
       setSaved(false);
+      cue("ok");
+      say(t("sp.balResult", { v: result.sec }));
+    } else {
+      cue("bad");
+      say(t("sp.rejected", { reason: t(result.reason) }));
     }
     setLast(result);
     go("idle");
@@ -85,10 +107,12 @@ export default function BalanceTest({ child, onBack }) {
         c.samples = [];
         c.start = 0;
         setHint("cue.step");
+        speakHint("cue.step");
         return;
       }
 
       setHint("bal.cue.both");
+      speakHint("bal.cue.both");
       if (!c.start) c.start = now;
       c.samples.push(f);
 
@@ -99,11 +123,14 @@ export default function BalanceTest({ child, onBack }) {
           c.start = 0;
           c.pauseUntil = now + 2500;
           setHint(cal.reason);
+          speakHint(cal.reason);
           return;
         }
         baseRef.current = cal;
         waitRef.current = { start: now, side: null, since: 0 };
         if (navigator.vibrate) navigator.vibrate(150);
+        cue("ready");
+        say(t("bal.cue.lift") + ". " + t("bal.cue.liftSub"));
         go("lift");
       }
       return;
@@ -139,8 +166,10 @@ export default function BalanceTest({ child, onBack }) {
           bad: null,
           hipXs: [],
           lastTick: -1,
+          lastSaid: 0,
         };
         setElapsed(0);
+        cue("tick");
         go("hold");
       }
       return;
@@ -176,6 +205,13 @@ export default function BalanceTest({ child, onBack }) {
         return;
       }
 
+      // Say the time every 10 seconds.
+      const secs = Math.floor((now - h.startT) / 1000);
+      if (secs >= 10 && secs % 10 === 0 && h.lastSaid !== secs) {
+        h.lastSaid = secs;
+        say(t("sp.seconds", { n: secs }));
+      }
+
       const tick = Math.floor((now - h.startT) / 200);
       if (tick !== h.lastTick) {
         h.lastTick = tick;
@@ -185,6 +221,7 @@ export default function BalanceTest({ child, onBack }) {
   }
 
   function stop() {
+    silence();
     go("idle");
     setOn(false);
   }
@@ -210,13 +247,14 @@ export default function BalanceTest({ child, onBack }) {
     setSaved(true);
   }
 
+  // The running timer is not a live region, so screen readers are not flooded.
   const overlay =
     phase === "calibrate" ? (
-      <div className="ov">
+      <div className="ov" role="status" aria-live="polite">
         <div className="ov-big">{t(hint)}</div>
       </div>
     ) : phase === "lift" ? (
-      <div className="ov">
+      <div className="ov" role="status" aria-live="polite">
         <div className="ov-big go">{t("bal.cue.lift")}</div>
         <div className="ov-sm">{t("bal.cue.liftSub")}</div>
       </div>
@@ -254,7 +292,15 @@ export default function BalanceTest({ child, onBack }) {
       </ol>
 
       {!on ? (
-        <button className="btn primary" onClick={() => setOn(true)}>{t("cam.start")}</button>
+        <button
+          className="btn primary"
+          onClick={() => {
+            prime();
+            setOn(true);
+          }}
+        >
+          {t("cam.start")}
+        </button>
       ) : (
         <>
           <PoseCamera facing={facing} onFrame={onFrame} overlay={overlay} />
@@ -284,7 +330,7 @@ export default function BalanceTest({ child, onBack }) {
 
       {last && phase === "idle" &&
         (last.ok ? (
-          <div className="result good">
+          <div className="result good" role="status">
             <div className="num">{last.sec} s</div>
             <div>{t("res.recorded", { n: attempts.length })} · {t(last.ended)}</div>
             {last.swayCm != null && (
@@ -292,7 +338,7 @@ export default function BalanceTest({ child, onBack }) {
             )}
           </div>
         ) : (
-          <div className="result bad">
+          <div className="result bad" role="status">
             <strong>{t("res.notCounted")}</strong>
             <div>{t(last.reason)}</div>
           </div>

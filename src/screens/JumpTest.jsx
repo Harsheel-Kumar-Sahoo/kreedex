@@ -1,8 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import { readFrame, calibrate, analyze } from "../jump";
 import { useT } from "../lang";
+import { useSettings } from "../settings";
 
 const CAL_MS = 2000;   // stand-still time for calibration
 const MAX_MS = 6000;   // longest time allowed for the jump
@@ -10,6 +11,7 @@ const MAX_ATTEMPTS = 3;
 
 export default function JumpTest({ child, onBack }) {
   const { t } = useT();
+  const { say, cue, silence, prime } = useSettings();
   const [on, setOn] = useState(false);
   const [facing, setFacing] = useState("environment");
   const [phase, setPhase] = useState("idle"); // idle | calibrate | jump
@@ -22,13 +24,26 @@ export default function JumpTest({ child, onBack }) {
   const calRef = useRef({ samples: [], start: 0, pauseUntil: 0 });
   const recRef = useRef(null);
   const baseRef = useRef(null);
+  const spokenRef = useRef("");
+
+  // Stop any speech when leaving this screen.
+  useEffect(() => () => silence(), [silence]);
 
   function go(p) {
     phaseRef.current = p;
     setPhase(p);
   }
 
+  // Speaks a cue once, not on every camera frame.
+  function speakHint(key) {
+    if (spokenRef.current === key) return;
+    spokenRef.current = key;
+    say(t(key));
+  }
+
   function startAttempt() {
+    prime();
+    spokenRef.current = "";
     calRef.current = { samples: [], start: 0, pauseUntil: 0 };
     setLast(null);
     setHint("cue.still");
@@ -41,6 +56,11 @@ export default function JumpTest({ child, onBack }) {
     if (result.ok) {
       setAttempts((a) => [...a, result.cm]);
       setSaved(false);
+      cue("ok");
+      say(t("sp.jumpResult", { v: result.cm }));
+    } else {
+      cue("bad");
+      say(t("sp.rejected", { reason: t(result.reason) }));
     }
     go("idle");
   }
@@ -57,10 +77,12 @@ export default function JumpTest({ child, onBack }) {
         c.samples = [];
         c.start = 0;
         setHint("cue.step");
+        speakHint("cue.step");
         return;
       }
 
       setHint("cue.still");
+      speakHint("cue.still");
       if (!c.start) c.start = now;
       c.samples.push(f);
 
@@ -71,11 +93,14 @@ export default function JumpTest({ child, onBack }) {
           c.start = 0;
           c.pauseUntil = now + 2500;
           setHint(cal.reason);
+          speakHint(cal.reason);
           return;
         }
         baseRef.current = cal;
         recRef.current = { samples: [], total: 0, start: now, peaked: false, settleStart: 0 };
         if (navigator.vibrate) navigator.vibrate(150);
+        cue("go");
+        say(t("cue.jump"));
         go("jump");
       }
       return;
@@ -106,6 +131,7 @@ export default function JumpTest({ child, onBack }) {
   }
 
   function stop() {
+    silence();
     go("idle");
     setOn(false);
   }
@@ -131,11 +157,11 @@ export default function JumpTest({ child, onBack }) {
 
   const overlay =
     phase === "calibrate" ? (
-      <div className="ov">
+      <div className="ov" role="status" aria-live="polite">
         <div className="ov-big">{t(hint)}</div>
       </div>
     ) : phase === "jump" ? (
-      <div className="ov">
+      <div className="ov" role="status" aria-live="polite">
         <div className="ov-big go">{t("cue.jump")}</div>
         <div className="ov-sm">{t("cue.then")}</div>
       </div>
@@ -165,7 +191,15 @@ export default function JumpTest({ child, onBack }) {
       </ol>
 
       {!on ? (
-        <button className="btn primary" onClick={() => setOn(true)}>{t("cam.start")}</button>
+        <button
+          className="btn primary"
+          onClick={() => {
+            prime();
+            setOn(true);
+          }}
+        >
+          {t("cam.start")}
+        </button>
       ) : (
         <>
           <PoseCamera facing={facing} onFrame={onFrame} overlay={overlay} />
@@ -195,12 +229,12 @@ export default function JumpTest({ child, onBack }) {
 
       {last && phase === "idle" &&
         (last.ok ? (
-          <div className="result good">
+          <div className="result good" role="status">
             <div className="num">{last.cm} cm</div>
             <div>{t("res.recorded", { n: attempts.length })}</div>
           </div>
         ) : (
-          <div className="result bad">
+          <div className="result bad" role="status">
             <strong>{t("res.notCounted")}</strong>
             <div>{t(last.reason)}</div>
           </div>
