@@ -218,6 +218,7 @@ export default function Profile({ childId, onBack, onRunTest }) {
                           <span>
                             {showVal(id, r.value)}
                             {l ? " · " + t("kh.level", { n: l.n }) : ""}
+                            {r.source === "camera" ? " · " + t("kh.viaCamera") : ""}
                           </span>
                           <button className="link danger noprint" onClick={() => removeResult(r.id)}>
                             {t("ch.delete")}

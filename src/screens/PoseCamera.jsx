@@ -81,7 +81,8 @@ export default function PoseCamera({ facing, onFrame, overlay }) {
                 lineWidth: 3,
               });
               drawer.drawLandmarks(pose, { color: "#ea580c", radius: 3 });
-              full = KEY_POINTS.every((i) => (pose[i].visibility ?? 0) > 0.5);
+              const vis = (i) => pose[i].visibility ?? 0;
+              full = vis(0) > 0.5 && (vis(27) > 0.5 || vis(28) > 0.5);
             }
             if (full !== lastFull) {
               lastFull = full;

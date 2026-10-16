@@ -4,6 +4,7 @@ import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import JumpTest from "./JumpTest";
 import BalanceTest from "./BalanceTest";
+import PushupTest from "./PushupTest";
 import ManualTests from "./ManualTests";
 import { useT } from "../lang";
 
@@ -80,7 +81,7 @@ export default function RunTest({ onBack }) {
     []
   );
   const [child, setChild] = useState(null);
-  const [mode, setMode] = useState(null); // null | "jump" | "balance" | "khelo" | "camera"
+  const [mode, setMode] = useState(null); // null | "jump" | "balance" | "push" | "khelo" | "camera"
 
   if (!child) {
     return (
@@ -107,8 +108,12 @@ export default function RunTest({ onBack }) {
     );
   }
 
+  // These two do not need the child's height.
   if (mode === "khelo") {
     return <ManualTests child={child} onBack={() => setMode(null)} />;
+  }
+  if (mode === "push") {
+    return <PushupTest child={child} onBack={() => setMode(null)} />;
   }
 
   if (!child.heightCm) {
@@ -145,6 +150,10 @@ export default function RunTest({ onBack }) {
         <button className="card" onClick={() => setMode("balance")}>
           <strong>{t("test.single_leg_balance")}</strong>
           <span>{t("rt.balanceSub")}</span>
+        </button>
+        <button className="card" onClick={() => setMode("push")}>
+          <strong>{t("rt.push")}</strong>
+          <span>{t("rt.pushSub")}</span>
         </button>
         <button className="card" onClick={() => setMode("khelo")}>
           <strong>{t("rt.khelo")}</strong>
