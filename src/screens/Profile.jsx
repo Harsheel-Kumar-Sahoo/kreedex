@@ -2,7 +2,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db";
 import { BENCHMARKS, SHOW_PLACEHOLDER_NOTICE } from "../benchmarks";
 import { computeKreedex, testHistory, band } from "../scoring";
-import { KHELO, KHELO_ORDER, LEVEL_COLORS, levelFor, fmt } from "../khelo";
+import { KHELO, KHELO_ORDER, LEVEL_COLORS, levelFor, fmt, hasTable } from "../khelo";
 import { useT } from "../lang";
 
 const LOCALES = { en: "en-IN", gu: "gu-IN", hi: "hi-IN" };
@@ -82,7 +82,14 @@ export default function Profile({ childId, onBack, onRunTest }) {
   const avgPts = scoredOfficial.length
     ? round1(scoredOfficial.reduce((s, o) => s + o.hist[0].lv.points, 0) / scoredOfficial.length)
     : null;
-  const showOfficial = child.age >= 9 || official.some((o) => o.hist.length);
+    // Show only the official tests that have results or that have a table for this age.
+  const relevant = official.filter(
+    (o) =>
+      o.hist.length ||
+      hasTable(o.id, "male", child.age) ||
+      hasTable(o.id, "female", child.age)
+  );
+  const showOfficial = relevant.length > 0;
 
   const showVal = (id, v) =>
     fmt(id, v) + (id === "run_600" ? "" : " " + t("kh.unit." + KHELO[id].unit));
@@ -185,7 +192,7 @@ export default function Profile({ childId, onBack, onRunTest }) {
             <p><strong>{t("kh.avg", { p: avgPts, n: scoredOfficial.length })}</strong></p>
           )}
 
-          {official.map(({ id, hist }) => {
+          {relevant.map(({ id, hist }) => {
             const top = hist[0];
             const lv = top ? top.lv : null;
             const color = lv ? LEVEL_COLORS[lv.n - 1] : null;

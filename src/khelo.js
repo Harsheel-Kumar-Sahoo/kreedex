@@ -9,10 +9,18 @@
 //
 // Known problems in the printed tables (see the README):
 //  - Some bands are empty ("13 to 13"), so a few levels cannot be earned.
+//  - Some Flamingo bands are only one or two falls wide.
 //  - 600 m for ages 14+ has inverted bands and implausible times, so it is left out.
 //  - 600 m at ages 12-13 differs sharply from neighbouring ages.
 
-export const KHELO_ORDER = ["curl_up", "push_up", "sit_reach", "run_600", "dash_50"];
+export const KHELO_ORDER = [
+  "flamingo",
+  "curl_up",
+  "push_up",
+  "sit_reach",
+  "run_600",
+  "dash_50",
+];
 
 export const LEVELS = [
   { n: 1, points: 2 },
@@ -29,6 +37,25 @@ export const LEVEL_COLORS = [
 ];
 
 export const KHELO = {
+  // Flamingo balance: number of falls during 60 seconds of balancing (fewer is better).
+  // Ages 5-8 only. A printed band "< X to Y" is read as Y <= falls < X, so each row
+  // holds the X values.
+  flamingo: {
+    dir: "down", unit: "falls", decimals: 0, min: 0, max: 200,
+    male: {
+      5: [24, 18, 13, 10, 9, 7, 5],
+      6: [25, 18, 14, 10, 8, 7, 5],
+      7: [26, 18, 14, 10, 8, 7, 4],
+      8: [26, 18, 14, 10, 8, 7, 5],
+    },
+    female: {
+      5: [23, 17, 13, 10, 8, 7, 5],
+      6: [23, 17, 13, 10, 8, 7, 5],
+      7: [23, 17, 13, 10, 8, 7, 5],
+      8: [24, 17, 13, 10, 8, 7, 5],
+    },
+  },
+
   curl_up: {
     dir: "up", unit: "reps", decimals: 0, min: 0, max: 100,
     male: {

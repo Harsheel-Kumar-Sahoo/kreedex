@@ -4,6 +4,7 @@ import { db } from "../db";
 import PoseCamera from "./PoseCamera";
 import JumpTest from "./JumpTest";
 import BalanceTest from "./BalanceTest";
+import FlamingoTest from "./FlamingoTest";
 import PushupTest from "./PushupTest";
 import ManualTests from "./ManualTests";
 import { useT } from "../lang";
@@ -81,7 +82,8 @@ export default function RunTest({ onBack }) {
     []
   );
   const [child, setChild] = useState(null);
-  const [mode, setMode] = useState(null); // null | "jump" | "balance" | "push" | "khelo" | "camera"
+  // null | "jump" | "balance" | "flamingo" | "push" | "khelo" | "camera"
+  const [mode, setMode] = useState(null);
 
   if (!child) {
     return (
@@ -108,12 +110,15 @@ export default function RunTest({ onBack }) {
     );
   }
 
-  // These two do not need the child's height.
+  // These do not need the child's height.
   if (mode === "khelo") {
     return <ManualTests child={child} onBack={() => setMode(null)} />;
   }
   if (mode === "push") {
     return <PushupTest child={child} onBack={() => setMode(null)} />;
+  }
+  if (mode === "flamingo") {
+    return <FlamingoTest child={child} onBack={() => setMode(null)} />;
   }
 
   if (!child.heightCm) {
@@ -150,6 +155,10 @@ export default function RunTest({ onBack }) {
         <button className="card" onClick={() => setMode("balance")}>
           <strong>{t("test.single_leg_balance")}</strong>
           <span>{t("rt.balanceSub")}</span>
+        </button>
+        <button className="card" disabled={child.age > 8} onClick={() => setMode("flamingo")}>
+          <strong>{t("rt.flamingo")}</strong>
+          <span>{child.age > 8 ? t("fl.onlyYoung") : t("rt.flamingoSub")}</span>
         </button>
         <button className="card" onClick={() => setMode("push")}>
           <strong>{t("rt.push")}</strong>
