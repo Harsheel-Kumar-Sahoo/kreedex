@@ -3,14 +3,18 @@ import { db } from "../db";
 import { computeKreedex } from "../scoring";
 import { SHOW_PLACEHOLDER_NOTICE } from "../benchmarks";
 import { useT } from "../lang";
+import { useAuth } from "../auth";
 
 export default function Children({ onBack, onOpen }) {
   const { t } = useT();
+  const { canSeeChild } = useAuth();
   const children = useLiveQuery(
     () => db.children.orderBy("createdAt").reverse().toArray(),
     []
   );
   const results = useLiveQuery(() => db.results.toArray(), []);
+
+  const mine = (children || []).filter(canSeeChild);
 
   const byChild = {};
   for (const r of results || []) {
@@ -33,12 +37,10 @@ export default function Children({ onBack, onOpen }) {
       {SHOW_PLACEHOLDER_NOTICE && <p className="note">{t("notice.placeholder")}</p>}
 
       {!children && <p className="muted">{t("loading")}</p>}
-      {children && children.length === 0 && (
-        <p className="muted">{t("ch.empty")}</p>
-      )}
+      {children && mine.length === 0 && <p className="muted">{t("ch.empty")}</p>}
 
       <div className="list">
-        {children?.map((c) => {
+        {mine.map((c) => {
           const k = computeKreedex(c, byChild[c.id] || []);
           return (
             <div className="childcard" key={c.id}>

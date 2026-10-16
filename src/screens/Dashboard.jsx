@@ -5,6 +5,7 @@ import { computeKreedex } from "../scoring";
 import { DISTRICTS } from "../districts";
 import { loadDemo, removeDemo } from "../demoData";
 import { PLACEHOLDER_NOTICE, SHOW_PLACEHOLDER_NOTICE } from "../benchmarks";
+import { useAuth, shownName } from "../auth";
 
 const STATUSES = [
   ["none", "Not shortlisted"],
@@ -36,15 +37,16 @@ function inAge(age, group) {
   return age >= a && age <= b;
 }
 
+// The export has no names: officials work with child IDs.
 function downloadCsv(rows) {
   const head = [
-    "Child ID", "Name", "Age", "Gender", "School", "District",
+    "Child ID", "Age", "Gender", "School", "District",
     "Kreedex Score", "Label", "Status", "Vertical jump (cm)", "Balance hold (s)", "Sample data",
   ];
   const data = rows.map(({ c, k }) => {
     const get = (id) => k.tests.find((t) => t.id === id)?.value ?? "";
     return [
-      c.id, c.name, c.age, c.gender, c.school, c.district,
+      c.id, c.age, c.gender, c.school, c.district,
       k.overall, k.band.label, STATUS_LABEL[c.pipeline || "none"],
       get("vertical_jump"), get("single_leg_balance"), c.demo ? "yes" : "no",
     ];
@@ -61,6 +63,10 @@ function downloadCsv(rows) {
 }
 
 export default function Dashboard({ onBack, onOpen }) {
+  const { account } = useAuth();
+  const scopeDistrict =
+    account && account.scope && account.scope !== "state" ? account.scope : null;
+
   const children = useLiveQuery(() => db.children.toArray(), []);
   const results = useLiveQuery(() => db.results.toArray(), []);
 
@@ -88,7 +94,9 @@ export default function Dashboard({ onBack, onOpen }) {
     byChild[r.childId].push(r);
   }
 
-  const all = children.map((c) => ({ c, k: computeKreedex(c, byChild[c.id] || []) }));
+  // An official with a district only sees that district.
+  const visible = children.filter((c) => !scopeDistrict || c.district === scopeDistrict);
+  const all = visible.map((c) => ({ c, k: computeKreedex(c, byChild[c.id] || []) }));
   const sampleCount = children.filter((c) => c.demo).length;
 
   const pool = all.filter(({ c }) =>
@@ -115,7 +123,8 @@ export default function Dashboard({ onBack, onOpen }) {
   const covList = Object.entries(cov).sort((a, b) => b[1].n - a[1].n);
   const maxN = covList.length ? covList[0][1].n : 1;
   const covered = DISTRICTS.filter((d) => cov[d]).length;
-  const uncovered = DISTRICTS.filter((d) => !cov[d]);
+  const uncovered = scopeDistrict ? [] : DISTRICTS.filter((d) => !cov[d]);
+  const totalDistricts = scopeDistrict ? 1 : DISTRICTS.length;
 
   const shown = scored
     .filter(
@@ -127,7 +136,7 @@ export default function Dashboard({ onBack, onOpen }) {
         (status === "all" || (c.pipeline || "none") === status)
     )
     .sort((a, b) =>
-      sort === "name" ? a.c.name.localeCompare(b.c.name) : b.k.overall - a.k.overall
+      sort === "name" ? a.c.id.localeCompare(b.c.id) : b.k.overall - a.k.overall
     );
 
   async function onLoad() {
@@ -167,25 +176,31 @@ export default function Dashboard({ onBack, onOpen }) {
     <section className="panel">
       <button className="link" onClick={onBack}>← Back</button>
       <h2>Scout dashboard</h2>
+      <p className="muted">Area: {scopeDistrict || "All of Gujarat"}</p>
 
       <p className="note">
-        This prototype has no login. The dashboard shows everything stored in this browser.
-        A real deployment would need role-based access for authorised officials.
+        Demo login: this dashboard shows the data stored in this browser. Names are shortened to
+        initials for officials, and exports contain no names. A real deployment needs server-side
+        access control, and data from teachers would arrive through import or sync.
       </p>
       {SHOW_PLACEHOLDER_NOTICE && <p className="note">{PLACEHOLDER_NOTICE}</p>}
 
-      <div className="row">
-        <button className="btn primary" onClick={onLoad} disabled={busy}>
-          {sampleCount > 0 ? "Reload sample data" : "Load sample data (60 children)"}
-        </button>
-        <button className="btn" onClick={onRemove} disabled={busy || sampleCount === 0}>
-          Remove sample data
-        </button>
-      </div>
-      <p className="muted">
-        Sample data is generated for demonstration. These are not real children.
-        {sampleCount > 0 ? ` ${sampleCount} sample children are loaded.` : ""}
-      </p>
+      {!scopeDistrict && (
+        <>
+          <div className="row">
+            <button className="btn primary" onClick={onLoad} disabled={busy}>
+              {sampleCount > 0 ? "Reload sample data" : "Load sample data (60 children)"}
+            </button>
+            <button className="btn" onClick={onRemove} disabled={busy || sampleCount === 0}>
+              Remove sample data
+            </button>
+          </div>
+          <p className="muted">
+            Sample data is generated for demonstration. These are not real children.
+            {sampleCount > 0 ? ` ${sampleCount} sample children are loaded.` : ""}
+          </p>
+        </>
+      )}
 
       <label className="form inline">
         <span className="muted">Show</span>
@@ -198,7 +213,10 @@ export default function Dashboard({ onBack, onOpen }) {
 
       {pool.length === 0 ? (
         <p className="muted">
-          No children to show yet. Load the sample data, or register children and save test results.
+          No children to show yet.{" "}
+          {scopeDistrict
+            ? "Results will appear here once data for your district is available on this device."
+            : "Load the sample data, or register children and save test results."}
         </p>
       ) : (
         <>
@@ -206,7 +224,7 @@ export default function Dashboard({ onBack, onOpen }) {
             <div className="stat"><span className="n">{scored.length}</span><span className="muted">Children screened</span></div>
             <div className="stat"><span className="n">{avg ?? "–"}</span><span className="muted">Average Kreedex Score</span></div>
             <div className="stat"><span className="n">{shortlisted.length}</span><span className="muted">In the pipeline</span></div>
-            <div className="stat"><span className="n">{covered}/{DISTRICTS.length}</span><span className="muted">Districts with screening</span></div>
+            <div className="stat"><span className="n">{covered}/{totalDistricts}</span><span className="muted">Districts with screening</span></div>
           </div>
           {untested > 0 && (
             <p className="muted">{untested} registered children have no saved results yet and are not listed.</p>
@@ -275,7 +293,7 @@ export default function Dashboard({ onBack, onOpen }) {
               Sort by
               <select value={sort} onChange={(e) => setSort(e.target.value)}>
                 <option value="score">Highest score</option>
-                <option value="name">Name A to Z</option>
+                <option value="name">Child ID</option>
               </select>
             </label>
           </div>
@@ -297,7 +315,7 @@ export default function Dashboard({ onBack, onOpen }) {
                 <div className="child" style={{ border: "none", padding: 0 }}>
                   <div>
                     <strong>
-                      {c.name}
+                      {c.demo ? c.name : shownName(c.name, "official")}
                       {c.demo && <span className="tag">SAMPLE</span>}
                     </strong>
                     <span className="muted">{c.id} · {c.age} yrs · {c.gender}</span>

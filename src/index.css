@@ -436,3 +436,39 @@ html.a11y-contrast select:focus-visible { outline-color: #000; }
 
 
 .lvlbig { font-size: 44px; font-weight: 800; line-height: 1; }
+.acctbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+}
+.rolebadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.acctname { color: var(--muted); }
+
+.tabs { display: flex; gap: 8px; }
+.tab {
+  flex: 1;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: var(--navy);
+  cursor: pointer;
+}
+.tab.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+.form input[readonly] { background: #f1f5f9; color: var(--muted); }
+
+html.a11y-contrast .tab { border: 2px solid #0f172a; }
+html.a11y-contrast .form input[readonly] { background: #e2e8f0; color: #0f172a; }

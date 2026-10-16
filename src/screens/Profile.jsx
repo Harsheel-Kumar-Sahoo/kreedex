@@ -4,6 +4,7 @@ import { BENCHMARKS, SHOW_PLACEHOLDER_NOTICE } from "../benchmarks";
 import { computeKreedex, testHistory, band } from "../scoring";
 import { KHELO, KHELO_ORDER, LEVEL_COLORS, levelFor, fmt, hasTable } from "../khelo";
 import { useT } from "../lang";
+import { useAuth, shownName } from "../auth";
 
 const LOCALES = { en: "en-IN", gu: "gu-IN", hi: "hi-IN" };
 const round1 = (x) => Math.round(x * 10) / 10;
@@ -38,6 +39,9 @@ function Spark({ values }) {
 
 export default function Profile({ childId, onBack, onRunTest }) {
   const { t, lang } = useT();
+  const { role, canSeeChild } = useAuth();
+  const isTeacher = role === "teacher";
+
   const child = useLiveQuery(() => db.children.get(childId), [childId]);
   const results = useLiveQuery(
     () => db.results.where("childId").equals(childId).toArray(),
@@ -56,6 +60,15 @@ export default function Profile({ childId, onBack, onRunTest }) {
       <section className="panel">
         <button className="link" onClick={onBack}>{t("back")}</button>
         <p className="muted">{t("loading")}</p>
+      </section>
+    );
+  }
+
+  if (!canSeeChild(child)) {
+    return (
+      <section className="panel">
+        <button className="link" onClick={onBack}>{t("back")}</button>
+        <p className="muted">{t("auth.noAccess")}</p>
       </section>
     );
   }
@@ -82,7 +95,8 @@ export default function Profile({ childId, onBack, onRunTest }) {
   const avgPts = scoredOfficial.length
     ? round1(scoredOfficial.reduce((s, o) => s + o.hist[0].lv.points, 0) / scoredOfficial.length)
     : null;
-    // Show only the official tests that have results or that have a table for this age.
+
+  // Show only the official tests that have results or that have a table for this age.
   const relevant = official.filter(
     (o) =>
       o.hist.length ||
@@ -93,6 +107,8 @@ export default function Profile({ childId, onBack, onRunTest }) {
 
   const showVal = (id, v) =>
     fmt(id, v) + (id === "run_600" ? "" : " " + t("kh.unit." + KHELO[id].unit));
+
+  const nameShown = child.demo ? child.name : shownName(child.name, role);
 
   async function removeResult(id) {
     if (window.confirm(t("pf.deleteConfirm"))) {
@@ -106,7 +122,7 @@ export default function Profile({ childId, onBack, onRunTest }) {
 
       <div>
         <h2>
-          {child.name}
+          {nameShown}
           {child.demo && <span className="tag">{t("tag.sample")}</span>}
         </h2>
         <p className="muted">
@@ -172,9 +188,11 @@ export default function Profile({ childId, onBack, onRunTest }) {
                     <div className="histrow" key={h.id}>
                       <span>{fmtDate(h.createdAt)}</span>
                       <span>{h.value} {bm.unit} · {t("pf.score")} {h.score}</span>
-                      <button className="link danger noprint" onClick={() => removeResult(h.id)}>
-                        {t("ch.delete")}
-                      </button>
+                      {isTeacher && (
+                        <button className="link danger noprint" onClick={() => removeResult(h.id)}>
+                          {t("ch.delete")}
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -227,9 +245,11 @@ export default function Profile({ childId, onBack, onRunTest }) {
                             {l ? " · " + t("kh.level", { n: l.n }) : ""}
                             {r.source === "camera" ? " · " + t("kh.viaCamera") : ""}
                           </span>
-                          <button className="link danger noprint" onClick={() => removeResult(r.id)}>
-                            {t("ch.delete")}
-                          </button>
+                          {isTeacher && (
+                            <button className="link danger noprint" onClick={() => removeResult(r.id)}>
+                              {t("ch.delete")}
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -244,7 +264,9 @@ export default function Profile({ childId, onBack, onRunTest }) {
       <p className="muted">{t("pf.disclaimer")}</p>
 
       <div className="row noprint">
-        <button className="btn primary" onClick={onRunTest}>{t("home.test")}</button>
+        {isTeacher && onRunTest && (
+          <button className="btn primary" onClick={onRunTest}>{t("home.test")}</button>
+        )}
         <button className="btn" onClick={() => window.print()}>{t("pf.print")}</button>
       </div>
     </section>

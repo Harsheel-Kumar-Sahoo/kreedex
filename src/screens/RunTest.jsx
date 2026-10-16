@@ -8,6 +8,7 @@ import FlamingoTest from "./FlamingoTest";
 import PushupTest from "./PushupTest";
 import ManualTests from "./ManualTests";
 import { useT } from "../lang";
+import { useAuth } from "../auth";
 
 function HeightForm({ child, onSaved, onBack }) {
   const { t } = useT();
@@ -77,6 +78,7 @@ function CameraCheck({ child, onBack }) {
 
 export default function RunTest({ onBack }) {
   const { t } = useT();
+  const { canSeeChild } = useAuth();
   const children = useLiveQuery(
     () => db.children.orderBy("createdAt").reverse().toArray(),
     []
@@ -97,7 +99,7 @@ export default function RunTest({ onBack }) {
         )}
 
         <div className="list">
-          {children?.filter((c) => !c.demo).map((c) => (
+           {children?.filter((c) => !c.demo && canSeeChild(c)).map((c) => (
             <button className="child pick" key={c.id} onClick={() => setChild(c)}>
               <div>
                 <strong>{c.name}</strong>

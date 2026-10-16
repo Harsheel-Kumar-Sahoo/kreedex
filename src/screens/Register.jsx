@@ -2,21 +2,25 @@ import { useState } from "react";
 import { db, newChildId } from "../db";
 import { DISTRICTS } from "../districts";
 import { useT } from "../lang";
-
-const empty = {
-  name: "",
-  age: "",
-  gender: "",
-  height: "",
-  school: "",
-  district: "",
-  guardian: "",
-  consent: false,
-};
+import { useAuth } from "../auth";
 
 export default function Register({ onBack }) {
   const { t } = useT();
-  const [f, setF] = useState(empty);
+  const { account } = useAuth();
+  const locked = !!(account && account.role === "teacher");
+
+  const blank = {
+    name: "",
+    age: "",
+    gender: "",
+    height: "",
+    school: locked ? account.school : "",
+    district: locked ? account.district : "",
+    guardian: "",
+    consent: false,
+  };
+
+  const [f, setF] = useState(blank);
   const [error, setError] = useState(""); // holds a string key
   const [savedId, setSavedId] = useState("");
 
@@ -50,9 +54,10 @@ export default function Register({ onBack }) {
       guardian: f.guardian.trim(),
       consentAt: new Date().toISOString(),
       createdAt: Date.now(),
+      createdBy: account ? account.id : null,
     });
     setSavedId(id);
-    setF(empty);
+    setF(blank);
   }
 
   if (savedId) {
@@ -110,16 +115,27 @@ export default function Register({ onBack }) {
 
         <label>
           {t("reg.school")}
-          <input value={f.school} onChange={set("school")} autoComplete="off" />
+          <input
+            value={f.school}
+            onChange={set("school")}
+            readOnly={locked}
+            autoComplete="off"
+          />
         </label>
 
         <label>
           {t("reg.district")}
-          <input list="districts" value={f.district} onChange={set("district")} />
+          <input
+            list="districts"
+            value={f.district}
+            onChange={set("district")}
+            readOnly={locked}
+          />
           <datalist id="districts">
             {DISTRICTS.map((d) => <option key={d} value={d} />)}
           </datalist>
         </label>
+        {locked && <p className="muted">{t("auth.lockedField")}</p>}
 
         <label>
           {t("reg.guardian")}
