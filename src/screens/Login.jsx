@@ -77,6 +77,7 @@ export default function Login() {
         <div className="logo">K</div>
         <h1>Kreedex</h1>
         <p className="tagline">{t("home.tagline")}</p>
+        <p className="muted">Built by Harsheel Kumar Sahoo · SVNIT Surat</p>
       </header>
 
       {notice && <p className="note">{t(notice)}</p>}
